@@ -6,11 +6,13 @@ if (!defined('ABSPATH')) {
 /**
  * Settings do plugin (wp-admin).
  *
- * Tela: Settings -> Affiliate Links
+ * Tela: Affiliate Links -> Styles
  * Objetivo: controlar cores do painel do shortcode via WP Color Picker.
  */
 class WAR_Admin_Settings {
 	const OPTION_KEY = 'war_ui_settings';
+	const MENU_SLUG = 'war-affiliate-links';
+	const STYLES_SLUG = 'war-affiliate-links-styles';
 
 	public static function init() {
 		add_action('admin_menu', [__CLASS__, 'register_menu']);
@@ -23,6 +25,7 @@ class WAR_Admin_Settings {
 			'text_color' => '#1d2327',
 			'muted_color' => '#50575e',
 			'button_text_color' => '#1d2327',
+			'link_color' => '#2271b1',
 		];
 	}
 
@@ -36,6 +39,7 @@ class WAR_Admin_Settings {
 			'text_color' => self::sanitize_hex_color($merged['text_color']),
 			'muted_color' => self::sanitize_hex_color($merged['muted_color']),
 			'button_text_color' => self::sanitize_hex_color($merged['button_text_color']),
+			'link_color' => self::sanitize_hex_color($merged['link_color']),
 		];
 	}
 
@@ -46,13 +50,43 @@ class WAR_Admin_Settings {
 	}
 
 	public static function register_menu() {
-		add_options_page(
+		// Menu topo do plugin.
+		add_menu_page(
 			__('Affiliate Links', WAR_TEXT_DOMAIN),
 			__('Affiliate Links', WAR_TEXT_DOMAIN),
 			'manage_options',
-			'war-affiliate-links',
+			self::MENU_SLUG,
+			[__CLASS__, 'redirect_to_links'],
+			'dashicons-admin-links',
+			58
+		);
+
+		// Submenu: Links (tela nativa do CPT).
+		add_submenu_page(
+			self::MENU_SLUG,
+			__('Links', WAR_TEXT_DOMAIN),
+			__('Links', WAR_TEXT_DOMAIN),
+			'manage_options',
+			'edit.php?post_type=war_link'
+		);
+
+		// Submenu: Styles (esta página).
+		add_submenu_page(
+			self::MENU_SLUG,
+			__('Styles', WAR_TEXT_DOMAIN),
+			__('Styles', WAR_TEXT_DOMAIN),
+			'manage_options',
+			self::STYLES_SLUG,
 			[__CLASS__, 'render_page']
 		);
+	}
+
+	public static function redirect_to_links() {
+		if (!current_user_can('manage_options')) {
+			return;
+		}
+		wp_safe_redirect(admin_url('edit.php?post_type=war_link'));
+		exit;
 	}
 
 	public static function register_settings() {
@@ -78,6 +112,7 @@ class WAR_Admin_Settings {
 		self::add_color_field('text_color', __('Cor do texto', WAR_TEXT_DOMAIN));
 		self::add_color_field('muted_color', __('Cor do texto secundário', WAR_TEXT_DOMAIN));
 		self::add_color_field('button_text_color', __('Cor do texto dos botões', WAR_TEXT_DOMAIN));
+		self::add_color_field('link_color', __('Cor dos links/ações', WAR_TEXT_DOMAIN));
 	}
 
 	private static function add_color_field($key, $label) {
@@ -112,7 +147,9 @@ class WAR_Admin_Settings {
 	}
 
 	public static function enqueue_assets($hook) {
-		if ($hook !== 'settings_page_war-affiliate-links') {
+		// Hook varia por slug; usamos o parâmetro page para ser resiliente.
+		$page = isset($_GET['page']) ? sanitize_text_field((string) wp_unslash($_GET['page'])) : '';
+		if ($page !== self::STYLES_SLUG) {
 			return;
 		}
 
@@ -129,7 +166,7 @@ class WAR_Admin_Settings {
 		}
 		?>
 		<div class="wrap">
-			<h1><?php echo esc_html__('Affiliate Links', WAR_TEXT_DOMAIN); ?></h1>
+			<h1><?php echo esc_html__('Affiliate Links — Styles', WAR_TEXT_DOMAIN); ?></h1>
 			<form method="post" action="options.php">
 				<?php
 				settings_fields('war_affiliate_links');

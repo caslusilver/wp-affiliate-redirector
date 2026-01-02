@@ -27,7 +27,8 @@ function war_register_affiliate_link_cpt() {
 		'publicly_queryable' => true,
 		'exclude_from_search' => true,
 		'show_ui' => true,
-		'show_in_menu' => true,
+		// Mostra o CPT sob o menu topo do plugin (Affiliate Links).
+		'show_in_menu' => 'war-affiliate-links',
 		'menu_icon' => 'dashicons-randomize',
 		'supports' => ['title'],
 		'has_archive' => false,

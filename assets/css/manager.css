@@ -26,6 +26,16 @@
   gap: 12px;
 }
 
+.war-topbar__left {
+  min-width: 56px;
+}
+
+.war-topbar__spacer {
+  display: inline-block;
+  width: 56px;
+  height: 1px;
+}
+
 .war-topbar__title {
   font-weight: 800;
   letter-spacing: 0.2px;
@@ -34,13 +44,23 @@
   flex: 1;
 }
 
-.war-btn--plus {
-  width: 44px;
-  height: 44px;
-  padding: 0;
-  border-radius: 14px;
-  font-size: 22px;
+.war-actionlink {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 6px 8px;
+  cursor: pointer;
+  color: var(--war-link);
+  font-weight: 800;
   line-height: 1;
+}
+
+.war-actionlink:hover {
+  text-decoration: underline;
+}
+
+.war-actionlink--right {
+  justify-self: end;
 }
 
 .war-search {
@@ -194,6 +214,8 @@
 .war-panel__title {
   font-weight: 800;
   font-size: 16px;
+  text-align: center;
+  flex: 1;
 }
 
 .war-field {
@@ -258,10 +280,28 @@
   cursor: pointer;
   line-height: 1;
   color: var(--war-btn-text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  min-height: 32px;
 }
 
 .war-icon-btn:hover {
   border-color: #c3c4c7;
+}
+
+.war-copy-icon {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+.war-copied {
+  font-weight: 800;
+  font-size: 12px;
+  color: var(--war-link);
+  white-space: nowrap;
 }
 
 .war-mono {

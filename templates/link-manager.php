@@ -7,8 +7,11 @@ if (!defined('ABSPATH')) {
 <div class="war-manager" data-war-manager="1" style="<?php echo isset($war_manager_style) ? esc_attr($war_manager_style) : ''; ?>">
 	<div class="war-topbar">
 		<div class="war-topbar__head">
+			<div class="war-topbar__left">
+				<span class="war-topbar__spacer" aria-hidden="true"></span>
+			</div>
 			<div class="war-topbar__title"><?php echo esc_html__('Affiliate Links', WAR_TEXT_DOMAIN); ?></div>
-			<button type="button" class="war-btn war-btn--primary war-btn--plus" aria-label="<?php echo esc_attr__('Criar', WAR_TEXT_DOMAIN); ?>" data-war-open-create="1">+</button>
+			<button type="button" class="war-actionlink" data-war-open-create="1"><?php echo esc_html__('Criar', WAR_TEXT_DOMAIN); ?></button>
 		</div>
 
 		<label class="war-search" aria-label="<?php echo esc_attr__('Buscar', WAR_TEXT_DOMAIN); ?>">
@@ -33,8 +36,9 @@ if (!defined('ABSPATH')) {
 	<div class="war-view" data-war-view="create" hidden>
 		<div class="war-panel">
 			<div class="war-panel__head">
+				<button type="button" class="war-actionlink" data-war-close-create="1"><?php echo esc_html__('Voltar', WAR_TEXT_DOMAIN); ?></button>
 				<div class="war-panel__title" data-war-form-title="1"><?php echo esc_html__('Criar', WAR_TEXT_DOMAIN); ?></div>
-				<button type="button" class="war-btn war-btn--link" data-war-close-create="1"><?php echo esc_html__('Cancelar', WAR_TEXT_DOMAIN); ?></button>
+				<button type="button" class="war-actionlink war-actionlink--right" data-war-submit-create="1"><?php echo esc_html__('Criar', WAR_TEXT_DOMAIN); ?></button>
 			</div>
 
 			<form class="war-form" data-war-form="1">
@@ -57,7 +61,7 @@ if (!defined('ABSPATH')) {
 				</label>
 
 				<div class="war-form__actions">
-					<button type="submit" class="war-btn war-btn--primary" data-war-action="submit"><?php echo esc_html__('Criar', WAR_TEXT_DOMAIN); ?></button>
+					<button type="submit" class="war-btn war-btn--primary" data-war-action="submit" style="display:none;"><?php echo esc_html__('Criar', WAR_TEXT_DOMAIN); ?></button>
 					<button type="button" class="war-btn" data-war-action="cancel" style="display:none;"><?php echo esc_html__('Cancelar edição', WAR_TEXT_DOMAIN); ?></button>
 					<span class="war-form__status" data-war-status="1" aria-live="polite"></span>
 				</div>

@@ -8,6 +8,7 @@
   var strings = cfg.strings || {};
   var isDebug = !!cfg.debug;
   var goBase = cfg.go_base || '';
+  var copyIconUrl = cfg.copy_icon_url || 'https://casluads.com.br/wp-content/uploads/2026/01/copy.webp';
 
   function $find(root, sel) { return root.find(sel); }
 
@@ -136,7 +137,7 @@
           '<div class="war-linkrow">' +
             '<a class="war-item__link war-mono" href="' + escapeHtml(publicUrl) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(publicUrl) + '</a>' +
             '<button type="button" class="war-icon-btn" aria-label="Copiar" data-war-copy="' + escapeHtml(publicUrl) + '">' +
-              '<span class="dashicons dashicons-admin-page" aria-hidden="true"></span>' +
+              '<img class="war-copy-icon" src="' + escapeHtml(copyIconUrl) + '" alt="Copiar" />' +
             '</button>' +
           '</div>' +
           '<div class="war-item__meta">' +
@@ -271,6 +272,14 @@
       setView(root, 'list');
     });
 
+    // submit from header action (texto minimalista)
+    root.on('click', '[data-war-submit-create="1"]', function () {
+      var $form = $find(root, '[data-war-form="1"]');
+      if ($form && $form.length) {
+        $form.trigger('submit');
+      }
+    });
+
     // pagination
     root.on('click', '[data-war-page]', function () {
       var p = parseInt($(this).attr('data-war-page'), 10) || 1;
@@ -281,14 +290,31 @@
     root.on('click', '[data-war-copy]', function () {
       var text = $(this).attr('data-war-copy') || '';
       if (!text) return;
+
+      var $btn = $(this);
+      var originalHtml = $btn.data('warCopyHtml');
+      if (!originalHtml) {
+        originalHtml = $btn.html();
+        $btn.data('warCopyHtml', originalHtml);
+      }
+
+      function showCopied() {
+        $btn.prop('disabled', true);
+        $btn.html('<span class="war-copied">Copiado <span aria-hidden="true">✓</span></span>');
+        window.setTimeout(function () {
+          $btn.html(originalHtml);
+          $btn.prop('disabled', false);
+        }, 1000);
+      }
+
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(text)
-          .then(function () { setStatus(root, getStr('copy_ok', 'URL copiada!')); })
+          .then(function () { setStatus(root, getStr('copy_ok', 'URL copiada!')); showCopied(); })
           .catch(function () { setStatus(root, getStr('copy_fail', 'Falha ao copiar.')); });
       } else {
         // fallback
         var $tmp = $('<input>').val(text).appendTo('body').select();
-        try { document.execCommand('copy'); setStatus(root, getStr('copy_ok', 'URL copiada!')); } catch (e) { setStatus(root, getStr('copy_fail', 'Falha ao copiar.')); }
+        try { document.execCommand('copy'); setStatus(root, getStr('copy_ok', 'URL copiada!')); showCopied(); } catch (e) { setStatus(root, getStr('copy_fail', 'Falha ao copiar.')); }
         $tmp.remove();
       }
     });

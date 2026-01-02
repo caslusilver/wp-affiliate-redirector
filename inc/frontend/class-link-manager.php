@@ -79,6 +79,7 @@ class WAR_Front_Link_Manager {
 			'per_page' => 20,
 			'debug' => $is_debug,
 			'go_base' => esc_url_raw(home_url('/go/')),
+			'copy_icon_url' => esc_url_raw('https://casluads.com.br/wp-content/uploads/2026/01/copy.webp'),
 			'strings' => [
 				'no_permission' => 'Você não tem permissão para usar este painel.',
 				'confirm_delete' => 'Tem certeza que deseja deletar este link?',
@@ -112,13 +113,15 @@ class WAR_Front_Link_Manager {
 			'text_color' => '#1d2327',
 			'muted_color' => '#50575e',
 			'button_text_color' => '#1d2327',
+			'link_color' => '#2271b1',
 		];
 
 		$war_manager_style = sprintf(
-			'--war-text:%s;--war-muted:%s;--war-btn-text:%s;',
+			'--war-text:%s;--war-muted:%s;--war-btn-text:%s;--war-link:%s;',
 			esc_attr($ui_settings['text_color']),
 			esc_attr($ui_settings['muted_color']),
-			esc_attr($ui_settings['button_text_color'])
+			esc_attr($ui_settings['button_text_color']),
+			esc_attr($ui_settings['link_color'])
 		);
 
 		$template = WAR_PLUGIN_DIR . 'templates/link-manager.php';

@@ -20,6 +20,28 @@
 ### Meta
 - N/A
 
+## 0.2.2 - 2026-01-02
+
+### Breaking
+- N/A
+
+### Removed
+- N/A
+
+### Added
+- Menu **Affiliate Links** agora é um menu topo no wp-admin com submenus **Links** e **Styles** (não fica mais em Configurações).
+- Adicionado `link_color` no Styles e aplicado via CSS variables (`--war-link`) para corrigir contraste e permitir customização.
+
+### Changed
+- Painel do shortcode: ações **Voltar/Criar** como texto minimalista no topo.
+- Copiar usa o ícone `copy.webp` e mostra **“Copiado ✓”** no lugar por ~1s.
+
+### Fixed
+- N/A
+
+### Meta
+- N/A
+
 ## 0.2.1 - 2026-01-02
 
 ### Breaking
