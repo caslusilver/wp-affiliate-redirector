@@ -40,7 +40,7 @@
 - Melhorias de contraste do texto dos botões/ações no card em fundo branco (via CSS variables).
 
 ### Meta
-- N/A
+- 339a625 - chore(release): v0.2.0
 
 ## 0.1.1 - 2026-01-02
 
