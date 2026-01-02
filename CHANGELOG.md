@@ -20,6 +20,29 @@
 ### Meta
 - N/A
 
+## 0.1.1 - 2026-01-02
+
+### Breaking
+- N/A
+
+### Removed
+- N/A
+
+### Added
+- N/A
+
+### Changed
+- N/A
+
+### Fixed
+- Correção crítica no `assets/js/manager.js` que sobrescrevia o `$` do jQuery e quebrava o painel.
+- Ativação do `WAR_DEBUG_MODE` (dev) para exibir popup/logs e facilitar diagnóstico.
+- Ajuste do botão "Atualizar Cache" do Git Updater para o mesmo padrão do `packing-panel-woo-dev` (UI + spinner + notices).
+- Correção do workflow GitHub Actions (YAML + permissões) para criar tag/release automaticamente.
+
+### Meta
+- N/A
+
 ## 0.1.0 - 2026-01-02
 
 ### Breaking
