@@ -30,6 +30,36 @@
   color: inherit;
 }
 
+.war-manager .war-btn,
+.war-manager .war-btn:link,
+.war-manager .war-btn:visited,
+.war-manager .war-btn:hover,
+.war-manager .war-btn:focus,
+.war-manager .war-btn:active {
+  /* força prioridade contra tema que muda cor de botões/links */
+  color: var(--war-btn-text) !important;
+}
+
+.war-manager .war-btn {
+  background: #fff !important;
+  border-color: #dcdcde !important;
+}
+
+.war-manager .war-btn:hover {
+  border-color: #c3c4c7 !important;
+}
+
+.war-manager .war-btn--primary {
+  background: #2271b1 !important;
+  border-color: #2271b1 !important;
+  color: #fff !important;
+}
+
+.war-manager .war-btn--primary:hover {
+  background: #135e96 !important;
+  border-color: #135e96 !important;
+}
+
 /* Topbar (Bitly-like) */
 .war-topbar {
   display: grid;
@@ -79,6 +109,12 @@
 
 .war-actionlink--right {
   justify-self: end;
+}
+
+.war-actionlink--plus {
+  font-size: 26px;
+  line-height: 1;
+  padding: 0 10px;
 }
 
 .war-search {

@@ -272,13 +272,7 @@
       setView(root, 'list');
     });
 
-    // submit from header action (texto minimalista)
-    root.on('click', '[data-war-submit-create="1"]', function () {
-      var $form = $find(root, '[data-war-form="1"]');
-      if ($form && $form.length) {
-        $form.trigger('submit');
-      }
-    });
+    // submit é feito pelo botão real do form (rodapé)
 
     // pagination
     root.on('click', '[data-war-page]', function () {

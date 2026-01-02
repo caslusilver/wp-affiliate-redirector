@@ -64,6 +64,28 @@
 ### Meta
 - 97d0d75 - chore(release): v0.2.3
 
+## 0.2.4 - 2026-01-02
+
+### Breaking
+- N/A
+
+### Removed
+- N/A
+
+### Added
+- N/A
+
+### Changed
+- Botões do painel agora forçam prioridade de cor (Editar/Excluir/Atualizar) para não ficarem brancos com overrides do tema.
+- Ação de criação no topo da lista agora usa o símbolo **“+”**.
+- Ações **Voltar** e **Criar/Atualizar** foram movidas para o rodapé do formulário (fluxo de preenchimento de cima para baixo).
+
+### Fixed
+- N/A
+
+### Meta
+- N/A
+
 ## 0.2.1 - 2026-01-02
 
 ### Breaking
