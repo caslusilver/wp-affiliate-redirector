@@ -43,7 +43,7 @@
 - Painel do shortcode passou a refletir corretamente o que foi criado no wp-admin (listagem/CRUD funcionando via AJAX em páginas do Elementor).
 
 ### Meta
-- N/A
+- c5edb7c - chore(release): v0.1.0
 
 ## 0.0.1 - 2026-01-02
 
