@@ -9,10 +9,10 @@
   var isDebug = !!cfg.debug;
   var goBase = cfg.go_base || '';
 
-  function $(root, sel) { return root.find(sel); }
+  function $find(root, sel) { return root.find(sel); }
 
   function setStatus(root, text) {
-    $('[data-war-status="1"]', root).text(text || '');
+    $find(root, '[data-war-status="1"]').text(text || '');
   }
 
   function setView(root, view) {
@@ -99,7 +99,7 @@
   }
 
   function renderRows(root, items) {
-    var $tbody = $('[data-war-rows="1"]', root);
+    var $tbody = $find(root, '[data-war-rows="1"]');
     if (!items || !items.length) {
       $tbody.html('<div class="war-list__empty">Nenhum link encontrado.</div>');
       return;
@@ -135,7 +135,7 @@
   }
 
   function renderPagination(root, page, totalPages) {
-    var $p = $('[data-war-pagination="1"]', root);
+    var $p = $find(root, '[data-war-pagination="1"]');
     if (!totalPages || totalPages <= 1) {
       $p.html('');
       return;
@@ -152,7 +152,7 @@
   }
 
   function loadList(root, page) {
-    var search = $('[data-war-search="1"]', root).val() || '';
+    var search = $find(root, '[data-war-search="1"]').val() || '';
     setStatus(root, 'Carregando...');
 
     return post('war_links_list', { page: page || 1, per_page: perPage, search: search })
@@ -174,25 +174,25 @@
   }
 
   function resetForm(root) {
-    var $form = $('[data-war-form="1"]', root);
-    $('[data-war-field="id"]', $form).val('');
-    $('[data-war-field="title"]', $form).val('');
-    $('[data-war-field="slug"]', $form).val('').prop('disabled', false);
-    $('[data-war-field="destination"]', $form).val('');
-    $('[data-war-action="submit"]', $form).text('Create');
-    $('[data-war-action="cancel"]', $form).hide();
-    $('[data-war-form-title="1"]', root).text('Create');
+    var $form = $find(root, '[data-war-form="1"]');
+    $find($form, '[data-war-field="id"]').val('');
+    $find($form, '[data-war-field="title"]').val('');
+    $find($form, '[data-war-field="slug"]').val('').prop('disabled', false);
+    $find($form, '[data-war-field="destination"]').val('');
+    $find($form, '[data-war-action="submit"]').text('Create');
+    $find($form, '[data-war-action="cancel"]').hide();
+    $find(root, '[data-war-form-title="1"]').text('Create');
   }
 
   function fillFormForEdit(root, item) {
-    var $form = $('[data-war-form="1"]', root);
-    $('[data-war-field="id"]', $form).val(item.id);
-    $('[data-war-field="title"]', $form).val(item.title || '');
-    $('[data-war-field="slug"]', $form).val(item.slug || '').prop('disabled', true);
-    $('[data-war-field="destination"]', $form).val(item.destination || '');
-    $('[data-war-action="submit"]', $form).text('Update');
-    $('[data-war-action="cancel"]', $form).show();
-    $('[data-war-form-title="1"]', root).text('Edit');
+    var $form = $find(root, '[data-war-form="1"]');
+    $find($form, '[data-war-field="id"]').val(item.id);
+    $find($form, '[data-war-field="title"]').val(item.title || '');
+    $find($form, '[data-war-field="slug"]').val(item.slug || '').prop('disabled', true);
+    $find($form, '[data-war-field="destination"]').val(item.destination || '');
+    $find($form, '[data-war-action="submit"]').text('Update');
+    $find($form, '[data-war-action="cancel"]').show();
+    $find(root, '[data-war-form-title="1"]').text('Edit');
   }
 
   function findItemFromRow($tr) {
@@ -297,10 +297,10 @@
     root.on('submit', '[data-war-form="1"]', function (e) {
       e.preventDefault();
       var $form = $(this);
-      var id = parseInt($('[data-war-field="id"]', $form).val(), 10) || 0;
-      var title = ($('[data-war-field="title"]', $form).val() || '').trim();
-      var slug = ($('[data-war-field="slug"]', $form).val() || '').trim();
-      var destination = ($('[data-war-field="destination"]', $form).val() || '').trim();
+      var id = parseInt($find($form, '[data-war-field="id"]').val(), 10) || 0;
+      var title = ($find($form, '[data-war-field="title"]').val() || '').trim();
+      var slug = ($find($form, '[data-war-field="slug"]').val() || '').trim();
+      var destination = ($find($form, '[data-war-field="destination"]').val() || '').trim();
 
       if (!title || !destination) {
         setStatus(root, 'Preencha título e destino.');

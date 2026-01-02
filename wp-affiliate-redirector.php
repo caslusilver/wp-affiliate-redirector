@@ -29,7 +29,15 @@ define('WAR_TEXT_DOMAIN', 'wp-affiliate-redirector');
  * define('WAR_DEBUG_MODE', true);
  */
 if (!defined('WAR_DEBUG_MODE')) {
-	define('WAR_DEBUG_MODE', false);
+	define('WAR_DEBUG_MODE', true);
+}
+
+// Exibe erros PHP no output quando o debug do plugin estiver ativo.
+// Atenção: em produção, mantenha WAR_DEBUG_MODE=false (ou use filtro `war_debug`).
+if (defined('WAR_DEBUG_MODE') && WAR_DEBUG_MODE) {
+	error_reporting(E_ALL);
+	@ini_set('display_errors', '1');
+	@ini_set('display_startup_errors', '1');
 }
 
 /**
