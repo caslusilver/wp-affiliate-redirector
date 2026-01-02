@@ -1,0 +1,143 @@
+/* WP Affiliate Redirector - Painel de gestão no front (admin only) */
+.war-manager {
+  max-width: 1100px;
+  margin: 24px auto;
+  padding: 0 16px;
+  box-sizing: border-box;
+}
+
+.war-manager__header {
+  margin-bottom: 16px;
+}
+
+.war-manager__title {
+  margin: 0 0 6px 0;
+  font-size: 20px;
+}
+
+.war-manager__subtitle {
+  margin: 0;
+  color: #50575e;
+}
+
+.war-manager__panel {
+  background: #fff;
+  border: 1px solid #dcdcde;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 14px 0;
+}
+
+.war-form__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.war-form__label {
+  display: grid;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.war-form__label--full {
+  grid-column: 1 / -1;
+}
+
+.war-form__input {
+  width: 100%;
+  max-width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #c3c4c7;
+  border-radius: 6px;
+}
+
+.war-form__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.war-form__status {
+  color: #1d2327;
+}
+
+.war-toolbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.war-toolbar__label {
+  display: grid;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.war-toolbar__input {
+  width: 320px;
+  max-width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #c3c4c7;
+  border-radius: 6px;
+}
+
+.war-table-wrap {
+  width: 100%;
+  overflow: auto;
+}
+
+.war-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.war-table th,
+.war-table td {
+  text-align: left;
+  padding: 10px 8px;
+  border-bottom: 1px solid #dcdcde;
+  vertical-align: top;
+}
+
+.war-table th {
+  font-weight: 700;
+  background: #f6f7f7;
+}
+
+.war-mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 12px;
+}
+
+.war-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.war-pagination {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.war-pagination .button[disabled] {
+  opacity: 0.6;
+}
+
+@media (max-width: 720px) {
+  .war-form__row {
+    grid-template-columns: 1fr;
+  }
+  .war-toolbar__input {
+    width: 100%;
+  }
+}
+
+
