@@ -4,21 +4,17 @@ if (!defined('ABSPATH')) {
 }
 ?>
 
-<div class="war-manager" data-war-manager="1">
+<div class="war-manager" data-war-manager="1" style="<?php echo isset($war_manager_style) ? esc_attr($war_manager_style) : ''; ?>">
 	<div class="war-topbar">
-		<div class="war-topbar__left">
-			<button type="button" class="war-topbar__menu" aria-label="<?php echo esc_attr__('Menu', WAR_TEXT_DOMAIN); ?>" disabled>≡</button>
-			<div class="war-topbar__brand" aria-label="WAR">war</div>
+		<div class="war-topbar__head">
+			<div class="war-topbar__title"><?php echo esc_html__('Affiliate Links', WAR_TEXT_DOMAIN); ?></div>
+			<button type="button" class="war-btn war-btn--primary war-btn--plus" aria-label="<?php echo esc_attr__('Criar', WAR_TEXT_DOMAIN); ?>" data-war-open-create="1">+</button>
 		</div>
-		<div class="war-topbar__center">
-			<label class="war-search" aria-label="<?php echo esc_attr__('Buscar', WAR_TEXT_DOMAIN); ?>">
-				<span class="war-search__icon" aria-hidden="true">🔎</span>
-				<input class="war-search__input" type="search" placeholder="<?php echo esc_attr__('Search', WAR_TEXT_DOMAIN); ?>" data-war-search="1" />
-			</label>
-		</div>
-		<div class="war-topbar__right">
-			<button type="button" class="war-btn war-btn--primary" data-war-open-create="1"><?php echo esc_html__('Create', WAR_TEXT_DOMAIN); ?></button>
-		</div>
+
+		<label class="war-search" aria-label="<?php echo esc_attr__('Buscar', WAR_TEXT_DOMAIN); ?>">
+			<span class="war-search__icon" aria-hidden="true">🔎</span>
+			<input class="war-search__input" type="search" placeholder="<?php echo esc_attr__('Buscar', WAR_TEXT_DOMAIN); ?>" data-war-search="1" />
+		</label>
 	</div>
 
 	<div class="war-view" data-war-view="list">
@@ -37,36 +33,31 @@ if (!defined('ABSPATH')) {
 	<div class="war-view" data-war-view="create" hidden>
 		<div class="war-panel">
 			<div class="war-panel__head">
-				<div class="war-panel__title" data-war-form-title="1"><?php echo esc_html__('Create', WAR_TEXT_DOMAIN); ?></div>
-				<button type="button" class="war-btn war-btn--link" data-war-close-create="1"><?php echo esc_html__('Cancel', WAR_TEXT_DOMAIN); ?></button>
+				<div class="war-panel__title" data-war-form-title="1"><?php echo esc_html__('Criar', WAR_TEXT_DOMAIN); ?></div>
+				<button type="button" class="war-btn war-btn--link" data-war-close-create="1"><?php echo esc_html__('Cancelar', WAR_TEXT_DOMAIN); ?></button>
 			</div>
 
 			<form class="war-form" data-war-form="1">
 				<input type="hidden" name="id" value="" data-war-field="id" />
 
 				<label class="war-field">
-					<div class="war-field__label"><?php echo esc_html__('Enter your destination URL', WAR_TEXT_DOMAIN); ?></div>
+					<div class="war-field__label"><?php echo esc_html__('URL de destino', WAR_TEXT_DOMAIN); ?></div>
 					<input class="war-field__input" type="url" name="destination" required placeholder="https://..." data-war-field="destination" />
 				</label>
 
 				<label class="war-field">
-					<div class="war-field__label"><?php echo esc_html__('Select domain (optional)', WAR_TEXT_DOMAIN); ?></div>
-					<div class="war-field__readonly" data-war-domain="1"><?php echo esc_html(home_url('/go/')); ?></div>
+					<div class="war-field__label"><?php echo esc_html__('Título', WAR_TEXT_DOMAIN); ?></div>
+					<input class="war-field__input" type="text" name="title" required placeholder="<?php echo esc_attr__('Digite um título', WAR_TEXT_DOMAIN); ?>" data-war-field="title" />
 				</label>
 
 				<label class="war-field">
-					<div class="war-field__label"><?php echo esc_html__('Back-half (optional)', WAR_TEXT_DOMAIN); ?></div>
-					<input class="war-field__input" type="text" name="slug" placeholder="<?php echo esc_attr__('Custom back-half (optional)', WAR_TEXT_DOMAIN); ?>" data-war-field="slug" />
-					<div class="war-field__hint"><?php echo esc_html__('A parte customizável do seu link (ex.: /go/back-half). Deixe em branco para gerar automático.', WAR_TEXT_DOMAIN); ?></div>
-				</label>
-
-				<label class="war-field">
-					<div class="war-field__label"><?php echo esc_html__('Title (required)', WAR_TEXT_DOMAIN); ?></div>
-					<input class="war-field__input" type="text" name="title" required placeholder="<?php echo esc_attr__('Tap to enter title', WAR_TEXT_DOMAIN); ?>" data-war-field="title" />
+					<div class="war-field__label"><?php echo esc_html__('Slug (opcional)', WAR_TEXT_DOMAIN); ?></div>
+					<input class="war-field__input" type="text" name="slug" placeholder="<?php echo esc_attr__('Slug (gerado automaticamente)', WAR_TEXT_DOMAIN); ?>" data-war-field="slug" />
+					<div class="war-field__hint"><?php echo esc_html__('O slug será sugerido pelo título, mas você pode editar.', WAR_TEXT_DOMAIN); ?></div>
 				</label>
 
 				<div class="war-form__actions">
-					<button type="submit" class="war-btn war-btn--primary" data-war-action="submit"><?php echo esc_html__('Create', WAR_TEXT_DOMAIN); ?></button>
+					<button type="submit" class="war-btn war-btn--primary" data-war-action="submit"><?php echo esc_html__('Criar', WAR_TEXT_DOMAIN); ?></button>
 					<button type="button" class="war-btn" data-war-action="cancel" style="display:none;"><?php echo esc_html__('Cancelar edição', WAR_TEXT_DOMAIN); ?></button>
 					<span class="war-form__status" data-war-status="1" aria-live="polite"></span>
 				</div>

@@ -84,6 +84,17 @@ class WAR_Front_Link_Manager {
 				'confirm_delete' => 'Tem certeza que deseja deletar este link?',
 				'copy_ok' => 'URL copiada!',
 				'copy_fail' => 'Falha ao copiar.',
+				'btn_create' => 'Criar',
+				'btn_update' => 'Atualizar',
+				'status_fill' => 'Preencha título e destino.',
+				'status_loading' => 'Carregando...',
+				'status_created' => 'Criando...',
+				'status_updated' => 'Atualizando...',
+				'status_deleted' => 'Deletando...',
+				'status_saved' => 'Salvo.',
+				'status_load_err' => 'Erro ao carregar.',
+				'status_save_err' => 'Erro ao salvar.',
+				'status_delete_err' => 'Erro ao deletar.',
 			],
 		]);
 	}
@@ -96,6 +107,19 @@ class WAR_Front_Link_Manager {
 		// Garante enqueue em builders (ex: Elementor), onde a detecção por post_content pode falhar.
 		self::$force_enqueue = true;
 		self::enqueue_assets();
+
+		$ui_settings = class_exists('WAR_Admin_Settings') ? WAR_Admin_Settings::get_settings() : [
+			'text_color' => '#1d2327',
+			'muted_color' => '#50575e',
+			'button_text_color' => '#1d2327',
+		];
+
+		$war_manager_style = sprintf(
+			'--war-text:%s;--war-muted:%s;--war-btn-text:%s;',
+			esc_attr($ui_settings['text_color']),
+			esc_attr($ui_settings['muted_color']),
+			esc_attr($ui_settings['button_text_color'])
+		);
 
 		$template = WAR_PLUGIN_DIR . 'templates/link-manager.php';
 

@@ -11,6 +11,26 @@
 
   function $find(root, sel) { return root.find(sel); }
 
+  function getStr(key, fallback) {
+    return (strings && strings[key]) ? strings[key] : (fallback || '');
+  }
+
+  function slugify(input) {
+    var s = String(input || '').trim();
+    if (!s) return '';
+
+    // Remove acentos quando possível.
+    try {
+      s = s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    } catch (e) {}
+
+    s = s.toLowerCase();
+    s = s.replace(/[^a-z0-9]+/g, '-');
+    s = s.replace(/^-+|-+$/g, '');
+    s = s.replace(/-{2,}/g, '-');
+    return s;
+  }
+
   function setStatus(root, text) {
     $find(root, '[data-war-status="1"]').text(text || '');
   }
@@ -113,15 +133,19 @@
       html += '<div class="war-item" data-id="' + escapeHtml(it.id) + '">' +
         '<div class="war-item__left">' +
           '<div class="war-item__title">' + escapeHtml(it.title) + '</div>' +
-          '<a class="war-item__link war-mono" href="' + escapeHtml(publicUrl) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(publicUrl) + '</a>' +
+          '<div class="war-linkrow">' +
+            '<a class="war-item__link war-mono" href="' + escapeHtml(publicUrl) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(publicUrl) + '</a>' +
+            '<button type="button" class="war-icon-btn" aria-label="Copiar" data-war-copy="' + escapeHtml(publicUrl) + '">' +
+              '<span class="dashicons dashicons-admin-page" aria-hidden="true"></span>' +
+            '</button>' +
+          '</div>' +
           '<div class="war-item__meta">' +
             '<div class="war-mono">#' + escapeHtml(it.id) + ' • ' + escapeHtml(it.slug || '') + '</div>' +
             '<div class="war-mono">' + escapeHtml(dest) + '</div>' +
           '</div>' +
           '<div class="war-item__actions">' +
-            '<button type="button" class="war-btn" data-war-copy="' + escapeHtml(publicUrl) + '">Copy</button>' +
-            '<button type="button" class="war-btn" data-war-edit="1">Edit</button>' +
-            '<button type="button" class="war-btn" data-war-delete="1">Delete</button>' +
+            '<button type="button" class="war-btn" data-war-edit="1">Editar</button>' +
+            '<button type="button" class="war-btn" data-war-delete="1">Excluir</button>' +
           '</div>' +
         '</div>' +
         '<div class="war-item__right">' +
@@ -153,13 +177,13 @@
 
   function loadList(root, page) {
     var search = $find(root, '[data-war-search="1"]').val() || '';
-    setStatus(root, 'Carregando...');
+    setStatus(root, getStr('status_loading', 'Carregando...'));
 
     return post('war_links_list', { page: page || 1, per_page: perPage, search: search })
       .done(function (res) {
         debugAppend({ ts: Date.now(), type: 'ajax_response', action: 'war_links_list', response: res });
         if (!res || !res.success) {
-          setStatus(root, (res && res.data && res.data.message) ? res.data.message : 'Erro ao carregar.');
+          setStatus(root, (res && res.data && res.data.message) ? res.data.message : getStr('status_load_err', 'Erro ao carregar.'));
           return;
         }
         renderRows(root, res.data.items || []);
@@ -169,7 +193,7 @@
       })
       .fail(function () {
         debugAppend({ ts: Date.now(), type: 'ajax_error', action: 'war_links_list' });
-        setStatus(root, 'Erro ao carregar.');
+        setStatus(root, getStr('status_load_err', 'Erro ao carregar.'));
       });
   }
 
@@ -179,9 +203,9 @@
     $find($form, '[data-war-field="title"]').val('');
     $find($form, '[data-war-field="slug"]').val('').prop('disabled', false);
     $find($form, '[data-war-field="destination"]').val('');
-    $find($form, '[data-war-action="submit"]').text('Create');
+    $find($form, '[data-war-action="submit"]').text(getStr('btn_create', 'Criar'));
     $find($form, '[data-war-action="cancel"]').hide();
-    $find(root, '[data-war-form-title="1"]').text('Create');
+    $find(root, '[data-war-form-title="1"]').text(getStr('btn_create', 'Criar'));
   }
 
   function fillFormForEdit(root, item) {
@@ -190,9 +214,9 @@
     $find($form, '[data-war-field="title"]').val(item.title || '');
     $find($form, '[data-war-field="slug"]').val(item.slug || '').prop('disabled', true);
     $find($form, '[data-war-field="destination"]').val(item.destination || '');
-    $find($form, '[data-war-action="submit"]').text('Update');
+    $find($form, '[data-war-action="submit"]').text(getStr('btn_update', 'Atualizar'));
     $find($form, '[data-war-action="cancel"]').show();
-    $find(root, '[data-war-form-title="1"]').text('Edit');
+    $find(root, '[data-war-form-title="1"]').text('Editar');
   }
 
   function findItemFromRow($tr) {
@@ -208,6 +232,17 @@
   function bind(root) {
     ensureDebugUI();
     debugAppend({ ts: Date.now(), type: 'manager_init', ajaxUrl: !!ajaxUrl, nonce: !!nonce, go_base: goBase });
+
+    var slugTouched = false;
+    root.on('input', '[data-war-field="slug"]', function () {
+      slugTouched = true;
+    });
+    root.on('input', '[data-war-field="title"]', function () {
+      if (slugTouched) return;
+      var title = ($(this).val() || '').trim();
+      var suggested = slugify(title);
+      $find(root, '[data-war-field="slug"]').val(suggested);
+    });
 
     // initial load
     loadList(root, 1);
@@ -248,12 +283,12 @@
       if (!text) return;
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(text)
-          .then(function () { setStatus(root, strings.copy_ok || 'Copiado!'); })
-          .catch(function () { setStatus(root, strings.copy_fail || 'Falha ao copiar.'); });
+          .then(function () { setStatus(root, getStr('copy_ok', 'URL copiada!')); })
+          .catch(function () { setStatus(root, getStr('copy_fail', 'Falha ao copiar.')); });
       } else {
         // fallback
         var $tmp = $('<input>').val(text).appendTo('body').select();
-        try { document.execCommand('copy'); setStatus(root, strings.copy_ok || 'Copiado!'); } catch (e) { setStatus(root, strings.copy_fail || 'Falha ao copiar.'); }
+        try { document.execCommand('copy'); setStatus(root, getStr('copy_ok', 'URL copiada!')); } catch (e) { setStatus(root, getStr('copy_fail', 'Falha ao copiar.')); }
         $tmp.remove();
       }
     });
@@ -272,18 +307,18 @@
       var id = parseInt($tr.attr('data-id'), 10) || 0;
       if (!id) return;
       if (!window.confirm(strings.confirm_delete || 'Deletar?')) return;
-      setStatus(root, 'Deletando...');
+      setStatus(root, getStr('status_deleted', 'Deletando...'));
       post('war_links_delete', { id: id })
         .done(function (res) {
           debugAppend({ ts: Date.now(), type: 'ajax_response', action: 'war_links_delete', response: res });
           if (!res || !res.success) {
-            setStatus(root, (res && res.data && res.data.message) ? res.data.message : 'Erro ao deletar.');
+            setStatus(root, (res && res.data && res.data.message) ? res.data.message : getStr('status_delete_err', 'Erro ao deletar.'));
             return;
           }
           resetForm(root);
           loadList(root, root.data('warPage') || 1);
         })
-        .fail(function () { debugAppend({ ts: Date.now(), type: 'ajax_error', action: 'war_links_delete' }); setStatus(root, 'Erro ao deletar.'); });
+        .fail(function () { debugAppend({ ts: Date.now(), type: 'ajax_error', action: 'war_links_delete' }); setStatus(root, getStr('status_delete_err', 'Erro ao deletar.')); });
     });
 
     // cancel edit
@@ -303,30 +338,30 @@
       var destination = ($find($form, '[data-war-field="destination"]').val() || '').trim();
 
       if (!title || !destination) {
-        setStatus(root, 'Preencha título e destino.');
+        setStatus(root, getStr('status_fill', 'Preencha título e destino.'));
         return;
       }
 
       var action = id ? 'war_links_update' : 'war_links_create';
       var payload = { id: id, title: title, slug: slug, destination: destination };
-      setStatus(root, id ? 'Atualizando...' : 'Criando...');
+      setStatus(root, id ? getStr('status_updated', 'Atualizando...') : getStr('status_created', 'Criando...'));
 
       post(action, payload)
         .done(function (res) {
           debugAppend({ ts: Date.now(), type: 'ajax_response', action: action, response: res });
           if (!res || !res.success) {
-            setStatus(root, (res && res.data && res.data.message) ? res.data.message : 'Erro ao salvar.');
+            setStatus(root, (res && res.data && res.data.message) ? res.data.message : getStr('status_save_err', 'Erro ao salvar.'));
             return;
           }
           resetForm(root);
           loadList(root, 1);
-          setStatus(root, 'Salvo.');
+          setStatus(root, getStr('status_saved', 'Salvo.'));
           setView(root, 'list');
           window.setTimeout(function () { setStatus(root, ''); }, 1200);
         })
         .fail(function () {
           debugAppend({ ts: Date.now(), type: 'ajax_error', action: action });
-          setStatus(root, 'Erro ao salvar.');
+          setStatus(root, getStr('status_save_err', 'Erro ao salvar.'));
         });
     });
   }

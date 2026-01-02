@@ -20,6 +20,28 @@
 ### Meta
 - N/A
 
+## 0.2.0 - 2026-01-02
+
+### Breaking
+- N/A
+
+### Removed
+- N/A
+
+### Added
+- Página de configurações no wp-admin para definir cores do painel (WP Color Picker).
+- Novo layout do painel: título \"Affiliate Links\" centralizado, botão \"+\" e ícone de copiar ao lado do link curto.
+
+### Changed
+- Campos do formulário reorganizados e traduzidos (pt-br) e remoção do \"Select domain\".
+- Slug agora é sugerido automaticamente a partir do título (editável).
+
+### Fixed
+- Melhorias de contraste do texto dos botões/ações no card em fundo branco (via CSS variables).
+
+### Meta
+- N/A
+
 ## 0.1.1 - 2026-01-02
 
 ### Breaking
