@@ -41,7 +41,7 @@
 - Correção do workflow GitHub Actions (YAML + permissões) para criar tag/release automaticamente.
 
 ### Meta
-- N/A
+- 505242b - chore(release): v0.1.1
 
 ## 0.1.0 - 2026-01-02
 
