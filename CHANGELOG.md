@@ -20,6 +20,27 @@
 ### Meta
 - N/A
 
+## 0.2.1 - 2026-01-02
+
+### Breaking
+- N/A
+
+### Removed
+- N/A
+
+### Added
+- N/A
+
+### Changed
+- Bump de versão do plugin para `0.2.1`.
+
+### Fixed
+- Contador de cliques agora só incrementa quando o destino é válido (evita contabilizar 404).
+- Popup de debug fixo também na página intermediária de redirecionamento quando `WAR_DEBUG_MODE=true`.
+
+### Meta
+- N/A
+
 ## 0.2.0 - 2026-01-02
 
 ### Breaking
