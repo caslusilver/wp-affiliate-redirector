@@ -9,7 +9,25 @@
   margin: 18px auto 28px;
   padding: 0 14px;
   box-sizing: border-box;
-  color: var(--war-text);
+  color: var(--war-text) !important;
+}
+
+/* Isolamento: evita overrides agressivos do tema (cores/botões/links) */
+.war-manager, .war-manager * {
+  box-sizing: border-box;
+}
+
+.war-manager a {
+  color: var(--war-link) !important;
+  text-decoration: none !important;
+}
+
+.war-manager a:hover {
+  text-decoration: underline !important;
+}
+
+.war-manager button {
+  color: inherit;
 }
 
 /* Topbar (Bitly-like) */
@@ -50,13 +68,13 @@
   background: transparent;
   padding: 6px 8px;
   cursor: pointer;
-  color: var(--war-link);
+  color: var(--war-link) !important;
   font-weight: 800;
   line-height: 1;
 }
 
 .war-actionlink:hover {
-  text-decoration: underline;
+  text-decoration: underline !important;
 }
 
 .war-actionlink--right {
@@ -67,8 +85,8 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #f0f0f1;
-  border: 1px solid #dcdcde;
+  background: #f0f0f1 !important;
+  border: 1px solid #dcdcde !important;
   border-radius: 999px;
   padding: 8px 12px;
 }
@@ -127,8 +145,8 @@
 
 /* List */
 .war-list {
-  background: #fff;
-  border: 1px solid #dcdcde;
+  background: #fff !important;
+  border: 1px solid #dcdcde !important;
   border-radius: 12px;
   overflow: hidden;
 }
@@ -153,6 +171,7 @@
 .war-item__title {
   font-weight: 700;
   margin-bottom: 6px;
+  color: var(--war-text) !important;
 }
 
 .war-item__link {
@@ -198,16 +217,17 @@
 
 /* Create panel */
 .war-panel {
-  background: #fff;
-  border: 1px solid #dcdcde;
+  background: #fff !important;
+  border: 1px solid #dcdcde !important;
   border-radius: 12px;
   padding: 14px;
 }
 
 .war-panel__head {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
+  gap: 10px;
   margin-bottom: 10px;
 }
 
@@ -216,6 +236,7 @@
   font-size: 16px;
   text-align: center;
   flex: 1;
+  color: var(--war-text) !important;
 }
 
 .war-field {
@@ -274,7 +295,7 @@
 .war-icon-btn {
   appearance: none;
   border: 1px solid #dcdcde;
-  background: #fff;
+  background: #fff !important;
   border-radius: 10px;
   padding: 6px 8px;
   cursor: pointer;
@@ -285,6 +306,7 @@
   justify-content: center;
   min-width: 36px;
   min-height: 32px;
+  overflow: hidden;
 }
 
 .war-icon-btn:hover {
@@ -299,7 +321,8 @@
 
 .war-copied {
   font-weight: 800;
-  font-size: 12px;
+  /* -50% (antes: 12px) */
+  font-size: 6px;
   color: var(--war-link);
   white-space: nowrap;
 }

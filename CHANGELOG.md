@@ -42,6 +42,28 @@
 ### Meta
 - 87f2722 - chore(release): v0.2.2
 
+## 0.2.3 - 2026-01-02
+
+### Breaking
+- N/A
+
+### Removed
+- N/A
+
+### Added
+- N/A
+
+### Changed
+- Isolamento de estilos do painel contra overrides agressivos do tema (prioridade de cor/links/botões dentro de `.war-manager`).
+- Ajuste do layout do header da tela de criação para garantir **Voltar | Título | Criar** sempre visível.
+- Ajuste do feedback **Copiado ✓** para não estourar a moldura e reduzir o tamanho do texto (~50%).
+
+### Fixed
+- N/A
+
+### Meta
+- N/A
+
 ## 0.2.1 - 2026-01-02
 
 ### Breaking
