@@ -82,6 +82,7 @@ class WAR_Ajax_Links {
 				'slug' => (string) $p->post_name,
 				'public_url' => get_permalink($post_id),
 				'destination' => (string) get_post_meta($post_id, $meta_key, true),
+				'clicks_total' => (int) get_post_meta($post_id, 'war_clicks_total', true),
 			];
 		}
 

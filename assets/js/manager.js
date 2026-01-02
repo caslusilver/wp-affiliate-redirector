@@ -6,6 +6,8 @@
   var nonce = cfg.nonce || '';
   var perPage = typeof cfg.per_page === 'number' ? cfg.per_page : 20;
   var strings = cfg.strings || {};
+  var isDebug = !!cfg.debug;
+  var goBase = cfg.go_base || '';
 
   function $(root, sel) { return root.find(sel); }
 
@@ -13,8 +15,81 @@
     $('[data-war-status="1"]', root).text(text || '');
   }
 
+  function setView(root, view) {
+    var $list = root.find('[data-war-view="list"]');
+    var $create = root.find('[data-war-view="create"]');
+    if (view === 'create') {
+      $list.prop('hidden', true);
+      $create.prop('hidden', false);
+    } else {
+      $create.prop('hidden', true);
+      $list.prop('hidden', false);
+    }
+  }
+
+  function ensureDebugUI() {
+    if (!isDebug) return null;
+    if ($('[data-war-debug="1"]').length) return $('[data-war-debug="1"]');
+
+    var html =
+      '<div data-war-debug="1" style="position:fixed;right:12px;bottom:12px;z-index:999999;max-width:560px;width:min(560px,calc(100vw - 24px));">' +
+        '<div style="background:#111;color:#fff;border-radius:10px;padding:10px;border:1px solid rgba(255,255,255,0.12);box-shadow:0 10px 30px rgba(0,0,0,0.35);">' +
+          '<div style="display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:8px;">' +
+            '<div style="font-weight:800;">WAR Debug</div>' +
+            '<div style="display:flex;gap:8px;align-items:center;">' +
+              '<button type="button" data-war-debug-copy="1" style="border:0;border-radius:999px;padding:6px 10px;font-weight:700;cursor:pointer;">Copiar</button>' +
+              '<button type="button" data-war-debug-clear="1" style="border:0;border-radius:999px;padding:6px 10px;font-weight:700;cursor:pointer;">Limpar</button>' +
+              '<button type="button" data-war-debug-min="1" style="border:0;border-radius:999px;padding:6px 10px;font-weight:700;cursor:pointer;">Min</button>' +
+            '</div>' +
+          '</div>' +
+          '<textarea data-war-debug-ta="1" style="width:100%;height:220px;background:#0b0b0b;color:#d1d5db;border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:10px;box-sizing:border-box;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,\\\"Liberation Mono\\\",\\\"Courier New\\\",monospace;font-size:12px;line-height:1.35;resize:vertical;"></textarea>' +
+        '</div>' +
+      '</div>';
+
+    $('body').append(html);
+    var $dbg = $('[data-war-debug="1"]');
+    var $ta = $dbg.find('[data-war-debug-ta="1"]');
+    var minimized = false;
+
+    $dbg.on('click', '[data-war-debug-min="1"]', function () {
+      minimized = !minimized;
+      $ta.css('display', minimized ? 'none' : 'block');
+    });
+
+    $dbg.on('click', '[data-war-debug-clear="1"]', function () {
+      $ta.val('');
+    });
+
+    $dbg.on('click', '[data-war-debug-copy="1"]', function () {
+      var text = $ta.val() || '';
+      if (!text) return;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text);
+      } else {
+        $ta[0].select();
+        try { document.execCommand('copy'); } catch (e) {}
+      }
+    });
+
+    return $dbg;
+  }
+
+  function debugAppend(obj) {
+    if (!isDebug) return;
+    var $dbg = ensureDebugUI();
+    if (!$dbg || !$dbg.length) return;
+    var $ta = $dbg.find('[data-war-debug-ta="1"]');
+    var current = $ta.val() || '';
+    var line = '';
+    try { line = JSON.stringify(obj); } catch (e) { line = String(obj); }
+    $ta.val((current ? current + "\n" : '') + line);
+    $ta.scrollTop($ta[0].scrollHeight);
+  }
+
   function post(action, data) {
-    return $.post(ajaxUrl, $.extend({ action: action, nonce: nonce }, data || {}));
+    var payload = $.extend({ action: action, nonce: nonce }, data || {});
+    debugAppend({ ts: Date.now(), type: 'ajax_request', action: action, payload: payload });
+    return $.post(ajaxUrl, payload);
   }
 
   function escapeHtml(str) {
@@ -26,7 +101,7 @@
   function renderRows(root, items) {
     var $tbody = $('[data-war-rows="1"]', root);
     if (!items || !items.length) {
-      $tbody.html('<tr><td colspan="4">Nenhum link encontrado.</td></tr>');
+      $tbody.html('<div class="war-list__empty">Nenhum link encontrado.</div>');
       return;
     }
 
@@ -34,22 +109,26 @@
     items.forEach(function (it) {
       var publicUrl = it.public_url || '';
       var dest = it.destination || '';
-      html += '<tr data-id="' + escapeHtml(it.id) + '">' +
-        '<td>' + escapeHtml(it.title) + '<br/><span class="war-mono">#' + escapeHtml(it.id) + ' • ' + escapeHtml(it.slug || '') + '</span></td>' +
-        '<td>' +
-          '<a class="war-mono" href="' + escapeHtml(publicUrl) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(publicUrl) + '</a>' +
-          '<div class="war-actions" style="margin-top:6px;">' +
-            '<button type="button" class="button button-small" data-war-copy="' + escapeHtml(publicUrl) + '">Copiar</button>' +
+      var clicks = typeof it.clicks_total === 'number' ? it.clicks_total : parseInt(it.clicks_total, 10) || 0;
+      html += '<div class="war-item" data-id="' + escapeHtml(it.id) + '">' +
+        '<div class="war-item__left">' +
+          '<div class="war-item__title">' + escapeHtml(it.title) + '</div>' +
+          '<a class="war-item__link war-mono" href="' + escapeHtml(publicUrl) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(publicUrl) + '</a>' +
+          '<div class="war-item__meta">' +
+            '<div class="war-mono">#' + escapeHtml(it.id) + ' • ' + escapeHtml(it.slug || '') + '</div>' +
+            '<div class="war-mono">' + escapeHtml(dest) + '</div>' +
           '</div>' +
-        '</td>' +
-        '<td><span class="war-mono">' + escapeHtml(dest) + '</span></td>' +
-        '<td>' +
-          '<div class="war-actions">' +
-            '<button type="button" class="button button-small" data-war-edit="1">Editar</button>' +
-            '<button type="button" class="button button-small button-link-delete" data-war-delete="1">Deletar</button>' +
+          '<div class="war-item__actions">' +
+            '<button type="button" class="war-btn" data-war-copy="' + escapeHtml(publicUrl) + '">Copy</button>' +
+            '<button type="button" class="war-btn" data-war-edit="1">Edit</button>' +
+            '<button type="button" class="war-btn" data-war-delete="1">Delete</button>' +
           '</div>' +
-        '</td>' +
-      '</tr>';
+        '</div>' +
+        '<div class="war-item__right">' +
+          '<div class="war-clicks__count">' + escapeHtml(clicks) + '</div>' +
+          '<div class="war-clicks__label">clicks</div>' +
+        '</div>' +
+      '</div>';
     });
 
     $tbody.html(html);
@@ -66,9 +145,9 @@
     var nextDisabled = page >= totalPages ? ' disabled' : '';
 
     $p.html(
-      '<button type="button" class="button" data-war-page="' + (page - 1) + '"' + prevDisabled + '>Anterior</button>' +
+      '<button type="button" class="war-btn" data-war-page="' + (page - 1) + '"' + prevDisabled + '>Anterior</button>' +
       '<span>Página ' + page + ' de ' + totalPages + '</span>' +
-      '<button type="button" class="button" data-war-page="' + (page + 1) + '"' + nextDisabled + '>Próxima</button>'
+      '<button type="button" class="war-btn" data-war-page="' + (page + 1) + '"' + nextDisabled + '>Próxima</button>'
     );
   }
 
@@ -78,6 +157,7 @@
 
     return post('war_links_list', { page: page || 1, per_page: perPage, search: search })
       .done(function (res) {
+        debugAppend({ ts: Date.now(), type: 'ajax_response', action: 'war_links_list', response: res });
         if (!res || !res.success) {
           setStatus(root, (res && res.data && res.data.message) ? res.data.message : 'Erro ao carregar.');
           return;
@@ -88,6 +168,7 @@
         root.data('warPage', res.data.page || 1);
       })
       .fail(function () {
+        debugAppend({ ts: Date.now(), type: 'ajax_error', action: 'war_links_list' });
         setStatus(root, 'Erro ao carregar.');
       });
   }
@@ -98,8 +179,9 @@
     $('[data-war-field="title"]', $form).val('');
     $('[data-war-field="slug"]', $form).val('').prop('disabled', false);
     $('[data-war-field="destination"]', $form).val('');
-    $('[data-war-action="submit"]', $form).text('Criar');
+    $('[data-war-action="submit"]', $form).text('Create');
     $('[data-war-action="cancel"]', $form).hide();
+    $('[data-war-form-title="1"]', root).text('Create');
   }
 
   function fillFormForEdit(root, item) {
@@ -108,21 +190,25 @@
     $('[data-war-field="title"]', $form).val(item.title || '');
     $('[data-war-field="slug"]', $form).val(item.slug || '').prop('disabled', true);
     $('[data-war-field="destination"]', $form).val(item.destination || '');
-    $('[data-war-action="submit"]', $form).text('Atualizar');
+    $('[data-war-action="submit"]', $form).text('Update');
     $('[data-war-action="cancel"]', $form).show();
+    $('[data-war-form-title="1"]', root).text('Edit');
   }
 
   function findItemFromRow($tr) {
     return {
       id: parseInt($tr.attr('data-id'), 10) || 0,
-      title: $tr.find('td').eq(0).contents().first().text().trim(),
-      slug: ($tr.find('.war-mono').first().text().split('•')[1] || '').trim(),
+      title: $tr.find('.war-item__title').text().trim(),
+      slug: ($tr.find('.war-item__meta .war-mono').first().text().split('•')[1] || '').trim(),
       public_url: $tr.find('a').attr('href') || '',
-      destination: $tr.find('td').eq(2).text().trim()
+      destination: $tr.find('.war-item__meta .war-mono').eq(1).text().trim()
     };
   }
 
   function bind(root) {
+    ensureDebugUI();
+    debugAppend({ ts: Date.now(), type: 'manager_init', ajaxUrl: !!ajaxUrl, nonce: !!nonce, go_base: goBase });
+
     // initial load
     loadList(root, 1);
 
@@ -138,6 +224,16 @@
       searchTimer = window.setTimeout(function () {
         loadList(root, 1);
       }, 250);
+    });
+
+    // open/close create
+    root.on('click', '[data-war-open-create="1"]', function () {
+      resetForm(root);
+      setView(root, 'create');
+    });
+    root.on('click', '[data-war-close-create="1"]', function () {
+      resetForm(root);
+      setView(root, 'list');
     });
 
     // pagination
@@ -164,20 +260,22 @@
 
     // edit
     root.on('click', '[data-war-edit="1"]', function () {
-      var $tr = $(this).closest('tr');
+      var $tr = $(this).closest('[data-id]');
       fillFormForEdit(root, findItemFromRow($tr));
-      $('html, body').animate({ scrollTop: root.offset().top - 20 }, 200);
+      setView(root, 'create');
+      $('html, body').animate({ scrollTop: root.offset().top - 10 }, 200);
     });
 
     // delete
     root.on('click', '[data-war-delete="1"]', function () {
-      var $tr = $(this).closest('tr');
+      var $tr = $(this).closest('[data-id]');
       var id = parseInt($tr.attr('data-id'), 10) || 0;
       if (!id) return;
       if (!window.confirm(strings.confirm_delete || 'Deletar?')) return;
       setStatus(root, 'Deletando...');
       post('war_links_delete', { id: id })
         .done(function (res) {
+          debugAppend({ ts: Date.now(), type: 'ajax_response', action: 'war_links_delete', response: res });
           if (!res || !res.success) {
             setStatus(root, (res && res.data && res.data.message) ? res.data.message : 'Erro ao deletar.');
             return;
@@ -185,13 +283,14 @@
           resetForm(root);
           loadList(root, root.data('warPage') || 1);
         })
-        .fail(function () { setStatus(root, 'Erro ao deletar.'); });
+        .fail(function () { debugAppend({ ts: Date.now(), type: 'ajax_error', action: 'war_links_delete' }); setStatus(root, 'Erro ao deletar.'); });
     });
 
     // cancel edit
     root.on('click', '[data-war-action="cancel"]', function () {
       resetForm(root);
       setStatus(root, '');
+      setView(root, 'list');
     });
 
     // submit form (create/update)
@@ -214,6 +313,7 @@
 
       post(action, payload)
         .done(function (res) {
+          debugAppend({ ts: Date.now(), type: 'ajax_response', action: action, response: res });
           if (!res || !res.success) {
             setStatus(root, (res && res.data && res.data.message) ? res.data.message : 'Erro ao salvar.');
             return;
@@ -221,9 +321,11 @@
           resetForm(root);
           loadList(root, 1);
           setStatus(root, 'Salvo.');
+          setView(root, 'list');
           window.setTimeout(function () { setStatus(root, ''); }, 1200);
         })
         .fail(function () {
+          debugAppend({ ts: Date.now(), type: 'ajax_error', action: action });
           setStatus(root, 'Erro ao salvar.');
         });
     });

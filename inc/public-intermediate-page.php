@@ -27,6 +27,12 @@ function war_render_intermediate_page_if_needed() {
 		exit;
 	}
 
+	// Contador simples de cliques (incrementa a cada visita válida ao /go/{slug}).
+	$clicks_key = 'war_clicks_total';
+	$current_clicks = (int) get_post_meta($post_id, $clicks_key, true);
+	$new_clicks = $current_clicks + 1;
+	update_post_meta($post_id, $clicks_key, $new_clicks);
+
 	$version = function_exists('WP_AFFILIATE_REDIRECTOR_get_version') ? WP_AFFILIATE_REDIRECTOR_get_version() : '0.0.0';
 	$css_url = WAR_PLUGIN_URL . 'assets/css/style.css?ver=' . rawurlencode($version);
 	$js_url = WAR_PLUGIN_URL . 'assets/js/script.js?ver=' . rawurlencode($version);
@@ -54,6 +60,10 @@ function war_render_intermediate_page_if_needed() {
 			window.WARRedirect = <?php echo wp_json_encode([
 				'destination' => $dest,
 				'delayMs' => $delay_ms,
+				'debug' => class_exists('WAR_Config') ? (bool) WAR_Config::is_debug() : false,
+				'postId' => (int) $post_id,
+				'slug' => (string) get_post_field('post_name', $post_id),
+				'clicksTotal' => (int) $new_clicks,
 			]); ?>;
 		</script>
 		<script src="<?php echo esc_url($js_url); ?>" defer></script>

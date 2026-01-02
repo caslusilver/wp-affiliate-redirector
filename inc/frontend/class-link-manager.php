@@ -11,6 +11,7 @@ if (!defined('ABSPATH')) {
 class WAR_Front_Link_Manager {
 	const SHORTCODE_TAG = 'war_link_manager';
 	const NONCE_ACTION = 'war_link_manager_nonce';
+	private static $force_enqueue = false;
 
 	public static function init() {
 		add_shortcode(self::SHORTCODE_TAG, [__CLASS__, 'render_shortcode']);
@@ -27,7 +28,7 @@ class WAR_Front_Link_Manager {
 			return;
 		}
 
-		$has_shortcode = has_shortcode($post->post_content, self::SHORTCODE_TAG);
+		$has_shortcode = self::$force_enqueue || has_shortcode($post->post_content, self::SHORTCODE_TAG);
 
 		// Fallback simples para Gutenberg (quando has_shortcode falha em alguns builders/blocos)
 		if (!$has_shortcode && function_exists('has_blocks') && has_blocks($post->post_content)) {
@@ -37,6 +38,14 @@ class WAR_Front_Link_Manager {
 					$has_shortcode = true;
 					break;
 				}
+			}
+		}
+
+		// Elementor: o conteúdo pode estar em post_meta (_elementor_data), não em post_content.
+		if (!$has_shortcode) {
+			$elementor_data = (string) get_post_meta((int) $post->ID, '_elementor_data', true);
+			if ($elementor_data !== '' && strpos($elementor_data, '[' . self::SHORTCODE_TAG . ']') !== false) {
+				$has_shortcode = true;
 			}
 		}
 
@@ -62,10 +71,14 @@ class WAR_Front_Link_Manager {
 			true
 		);
 
+		$is_debug = class_exists('WAR_Config') ? (bool) WAR_Config::is_debug() : false;
+
 		wp_localize_script('war-link-manager', 'WARLinkManager', [
 			'ajax_url' => admin_url('admin-ajax.php'),
 			'nonce' => wp_create_nonce(self::NONCE_ACTION),
 			'per_page' => 20,
+			'debug' => $is_debug,
+			'go_base' => esc_url_raw(home_url('/go/')),
 			'strings' => [
 				'no_permission' => 'Você não tem permissão para usar este painel.',
 				'confirm_delete' => 'Tem certeza que deseja deletar este link?',
@@ -79,6 +92,10 @@ class WAR_Front_Link_Manager {
 		if (!current_user_can('manage_options')) {
 			return '<p>' . esc_html__('Você não tem permissão para visualizar este painel.', WAR_TEXT_DOMAIN) . '</p>';
 		}
+
+		// Garante enqueue em builders (ex: Elementor), onde a detecção por post_content pode falhar.
+		self::$force_enqueue = true;
+		self::enqueue_assets();
 
 		$template = WAR_PLUGIN_DIR . 'templates/link-manager.php';
 
