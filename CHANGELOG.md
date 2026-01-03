@@ -73,6 +73,29 @@
 ### Meta
 - 1b27215 - chore(release): v0.2.6
 
+## 0.2.7 - 2026-01-03
+
+### Breaking
+- N/A
+
+### Removed
+- N/A
+
+### Added
+- N/A
+
+### Changed
+- N/A
+
+### UI (Cards)
+- Coluna de métricas (CLICKS) agora tem largura fixa e não é afetada por títulos/links longos (principalmente em mobile vertical).
+
+### Fixed
+- N/A
+
+### Meta
+- N/A
+
 ## 0.2.2 - 2026-01-02
 
 ### Breaking

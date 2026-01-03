@@ -194,7 +194,7 @@
 
 .war-item {
   display: grid;
-  grid-template-columns: 1fr 86px;
+  grid-template-columns: minmax(0, 1fr) 86px;
   gap: 10px;
   padding: 14px;
   border-top: 1px solid #f0f0f1;
@@ -243,11 +243,17 @@
   margin-top: 10px;
 }
 
+.war-item__left {
+  min-width: 0;
+}
+
 .war-item__right {
   display: grid;
   justify-items: end;
   align-content: start;
   gap: 6px;
+  width: 86px;
+  flex-shrink: 0;
 }
 
 .war-clicks__metric {
@@ -446,7 +452,10 @@
 
 @media (max-width: 720px) {
   .war-item {
-    grid-template-columns: 1fr 72px;
+    grid-template-columns: minmax(0, 1fr) 72px;
+  }
+  .war-item__right {
+    width: 72px;
   }
 }
 
