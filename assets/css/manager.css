@@ -352,6 +352,37 @@
   min-width: 0;
 }
 
+.war-linkrow .war-item__link {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.war-item__actions {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.war-action-icon {
+  appearance: none;
+  border: 0 !important;
+  background: transparent !important;
+  padding: 4px !important;
+  border-radius: 8px !important;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.war-action-icon:hover {
+  background: rgba(0,0,0,0.05) !important;
+}
+
+.war-action-icon__img {
+  width: 18px;
+  height: 18px;
+  display: block;
+  object-fit: contain;
+}
 .war-icon-btn {
   appearance: none;
   border: 1px solid #dcdcde;

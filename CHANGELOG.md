@@ -49,6 +49,30 @@
 ### Meta
 - 2a648e1 - chore(release): v0.2.5
 
+## 0.2.6 - 2026-01-03
+
+### Breaking
+- N/A
+
+### Removed
+- N/A
+
+### Added
+- N/A
+
+### Changed
+- N/A
+
+### UI (Cards)
+- Link público (visual) agora usa prefixo fixo **`af.link/{slug}`** (apenas identidade visual), mantendo o `href` real do seu domínio.
+- Ações de card (Editar/Excluir) agora usam ícones minimalistas (sem stroke) e os ícones foram empacotados em `assets/icons/` para distribuição offline.
+
+### Fixed
+- N/A
+
+### Meta
+- N/A
+
 ## 0.2.2 - 2026-01-02
 
 ### Breaking

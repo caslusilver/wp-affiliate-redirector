@@ -10,6 +10,8 @@
   var goBase = cfg.go_base || '';
   var copyIconUrl = cfg.copy_icon_url || 'https://casluads.com.br/wp-content/uploads/2026/01/copy.webp';
   var graphIconUrl = cfg.graph_icon_url || 'https://casluads.com.br/wp-content/uploads/2026/01/IMG_8972.png';
+  var editIconUrl = cfg.edit_icon_url || 'https://casluads.com.br/wp-content/uploads/2026/01/editing.png';
+  var deleteIconUrl = cfg.delete_icon_url || 'https://casluads.com.br/wp-content/uploads/2026/01/app.png';
 
   function $find(root, sel) { return root.find(sel); }
 
@@ -150,20 +152,28 @@
     var html = '';
     items.forEach(function (it) {
       var publicUrl = it.public_url || '';
-      var displayPublic = formatPublicUrlDisplay(publicUrl);
+      var slug = (it.slug || '').trim();
+      var displayPublic = slug ? ('af.link/' + slug) : 'af.link/';
       var clicks = typeof it.clicks_total === 'number' ? it.clicks_total : parseInt(it.clicks_total, 10) || 0;
-      html += '<div class="war-item" data-id="' + escapeHtml(it.id) + '">' +
+      html += '<div class="war-item" data-id="' + escapeHtml(it.id) + '"' +
+        ' data-war-slug="' + escapeHtml(it.slug || '') + '"' +
+        ' data-war-destination="' + escapeHtml(it.destination || '') + '"' +
+      '>' +
         '<div class="war-item__left">' +
           '<div class="war-item__title">' + escapeHtml(it.title) + '</div>' +
           '<div class="war-linkrow">' +
-            '<a class="war-item__link war-mono" href="' + escapeHtml(publicUrl) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(displayPublic || publicUrl) + '</a>' +
+            '<a class="war-item__link war-mono" href="' + escapeHtml(publicUrl) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(displayPublic) + '</a>' +
             '<button type="button" class="war-icon-btn" aria-label="Copiar" data-war-copy="' + escapeHtml(publicUrl) + '">' +
               '<img class="war-copy-icon" src="' + escapeHtml(copyIconUrl) + '" alt="Copiar" />' +
             '</button>' +
           '</div>' +
           '<div class="war-item__actions">' +
-            '<button type="button" class="war-btn" data-war-edit="1">Editar</button>' +
-            '<button type="button" class="war-btn" data-war-delete="1">Excluir</button>' +
+            '<button type="button" class="war-action-icon" aria-label="Editar" data-war-edit="1">' +
+              '<img class="war-action-icon__img" src="' + escapeHtml(editIconUrl) + '" alt="Editar" />' +
+            '</button>' +
+            '<button type="button" class="war-action-icon" aria-label="Excluir" data-war-delete="1">' +
+              '<img class="war-action-icon__img" src="' + escapeHtml(deleteIconUrl) + '" alt="Excluir" />' +
+            '</button>' +
           '</div>' +
         '</div>' +
         '<div class="war-item__right">' +
@@ -244,9 +254,9 @@
     return {
       id: parseInt($tr.attr('data-id'), 10) || 0,
       title: $tr.find('.war-item__title').text().trim(),
-      slug: '',
+      slug: ($tr.attr('data-war-slug') || '').trim(),
       public_url: $tr.find('a').attr('href') || '',
-      destination: ''
+      destination: ($tr.attr('data-war-destination') || '').trim()
     };
   }
 
