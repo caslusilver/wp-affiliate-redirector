@@ -14,6 +14,35 @@
 ### Changed
 - N/A
 
+### UI (Cards)
+- N/A
+
+### Fixed
+- N/A
+
+### Meta
+- N/A
+
+## 0.2.5 - 2026-01-03
+
+### Breaking
+- N/A
+
+### Removed
+- N/A
+
+### Added
+- N/A
+
+### Changed
+- N/A
+
+### UI (Cards)
+- Cards do painel: removida a meta abaixo do link público (não exibe mais `#id • slug` nem a URL de destino).
+- Link público agora é exibido como `dominio/caminho` (sem `https://`), mantendo o `href` completo.
+- Contador de cliques agora exibe ícone de gráfico ao lado (`IMG_8972.png`) e mantém alinhamento compacto.
+- Truncamento com `…` (ellipsis) para título/link e aumento de fonte do link público em ~20% para facilitar a cópia.
+
 ### Fixed
 - N/A
 

@@ -9,6 +9,7 @@
   var isDebug = !!cfg.debug;
   var goBase = cfg.go_base || '';
   var copyIconUrl = cfg.copy_icon_url || 'https://casluads.com.br/wp-content/uploads/2026/01/copy.webp';
+  var graphIconUrl = cfg.graph_icon_url || 'https://casluads.com.br/wp-content/uploads/2026/01/IMG_8972.png';
 
   function $find(root, sel) { return root.find(sel); }
 
@@ -119,6 +120,26 @@
     });
   }
 
+  function formatPublicUrlDisplay(publicUrl) {
+    var u = String(publicUrl || '').trim();
+    if (!u) return '';
+
+    // Prefer URL parser to avoid edge cases.
+    try {
+      var parsed = new URL(u);
+      var host = parsed.host || '';
+      var path = parsed.pathname || '';
+      // Remove trailing slash, but keep root.
+      if (path.length > 1) path = path.replace(/\/+$/, '');
+      return (host + path).replace(/^\/+/, '');
+    } catch (e) {
+      // Fallback: strip scheme.
+      u = u.replace(/^https?:\/\//i, '');
+      u = u.replace(/\/+$/, '');
+      return u;
+    }
+  }
+
   function renderRows(root, items) {
     var $tbody = $find(root, '[data-war-rows="1"]');
     if (!items || !items.length) {
@@ -129,20 +150,16 @@
     var html = '';
     items.forEach(function (it) {
       var publicUrl = it.public_url || '';
-      var dest = it.destination || '';
+      var displayPublic = formatPublicUrlDisplay(publicUrl);
       var clicks = typeof it.clicks_total === 'number' ? it.clicks_total : parseInt(it.clicks_total, 10) || 0;
       html += '<div class="war-item" data-id="' + escapeHtml(it.id) + '">' +
         '<div class="war-item__left">' +
           '<div class="war-item__title">' + escapeHtml(it.title) + '</div>' +
           '<div class="war-linkrow">' +
-            '<a class="war-item__link war-mono" href="' + escapeHtml(publicUrl) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(publicUrl) + '</a>' +
+            '<a class="war-item__link war-mono" href="' + escapeHtml(publicUrl) + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(displayPublic || publicUrl) + '</a>' +
             '<button type="button" class="war-icon-btn" aria-label="Copiar" data-war-copy="' + escapeHtml(publicUrl) + '">' +
               '<img class="war-copy-icon" src="' + escapeHtml(copyIconUrl) + '" alt="Copiar" />' +
             '</button>' +
-          '</div>' +
-          '<div class="war-item__meta">' +
-            '<div class="war-mono">#' + escapeHtml(it.id) + ' • ' + escapeHtml(it.slug || '') + '</div>' +
-            '<div class="war-mono">' + escapeHtml(dest) + '</div>' +
           '</div>' +
           '<div class="war-item__actions">' +
             '<button type="button" class="war-btn" data-war-edit="1">Editar</button>' +
@@ -150,7 +167,10 @@
           '</div>' +
         '</div>' +
         '<div class="war-item__right">' +
-          '<div class="war-clicks__count">' + escapeHtml(clicks) + '</div>' +
+          '<div class="war-clicks__metric">' +
+            '<div class="war-clicks__count">' + escapeHtml(clicks) + '</div>' +
+            '<img class="war-graph-icon" src="' + escapeHtml(graphIconUrl) + '" alt="" aria-hidden="true" />' +
+          '</div>' +
           '<div class="war-clicks__label">clicks</div>' +
         '</div>' +
       '</div>';
@@ -224,9 +244,9 @@
     return {
       id: parseInt($tr.attr('data-id'), 10) || 0,
       title: $tr.find('.war-item__title').text().trim(),
-      slug: ($tr.find('.war-item__meta .war-mono').first().text().split('•')[1] || '').trim(),
+      slug: '',
       public_url: $tr.find('a').attr('href') || '',
-      destination: $tr.find('.war-item__meta .war-mono').eq(1).text().trim()
+      destination: ''
     };
   }
 

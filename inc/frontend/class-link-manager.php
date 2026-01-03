@@ -80,6 +80,7 @@ class WAR_Front_Link_Manager {
 			'debug' => $is_debug,
 			'go_base' => esc_url_raw(home_url('/go/')),
 			'copy_icon_url' => esc_url_raw('https://casluads.com.br/wp-content/uploads/2026/01/copy.webp'),
+			'graph_icon_url' => esc_url_raw('https://casluads.com.br/wp-content/uploads/2026/01/IMG_8972.png'),
 			'strings' => [
 				'no_permission' => 'Você não tem permissão para usar este painel.',
 				'confirm_delete' => 'Tem certeza que deseja deletar este link?',

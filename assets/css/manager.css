@@ -208,13 +208,22 @@
   font-weight: 700;
   margin-bottom: 6px;
   color: var(--war-text) !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .war-item__link {
-  display: inline-block;
+  display: block;
   color: var(--war-link);
   text-decoration: none;
   margin-bottom: 8px;
+  /* +20% (base 12px do .war-mono) */
+  font-size: 14.4px;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .war-item__link:hover {
@@ -241,9 +250,23 @@
   gap: 6px;
 }
 
+.war-clicks__metric {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .war-clicks__count {
   font-weight: 800;
   font-size: 18px;
+}
+
+.war-graph-icon {
+  width: 14px;
+  height: 14px;
+  display: block;
+  object-fit: contain;
+  opacity: 0.9;
 }
 
 .war-clicks__label {
@@ -326,6 +349,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  min-width: 0;
 }
 
 .war-icon-btn {
