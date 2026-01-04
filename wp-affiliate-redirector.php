@@ -3,7 +3,7 @@
  * Plugin Name: WP Affiliate Redirector
  * Plugin URI: https://github.com/caslusilver/wp-affiliate-redirector
  * Description: Gerenciador de links de afiliado com página intermediária (loader) e redirecionamento configurável.
- * Version: 0.2.7
+ * Version: 0.3.0
  * Author: Lucas Andrade / AI
  * Author URI: https://github.com/caslusilver
  * License: GPL2
@@ -104,8 +104,11 @@ require_once WAR_PLUGIN_DIR . 'inc/core/class-config.php';
 require_once WAR_PLUGIN_DIR . 'inc/core/class-debug.php';
 require_once WAR_PLUGIN_DIR . 'inc/frontend/class-link-manager.php';
 require_once WAR_PLUGIN_DIR . 'inc/frontend/class-ajax-links.php';
+require_once WAR_PLUGIN_DIR . 'inc/frontend/class-ig-chat.php';
+require_once WAR_PLUGIN_DIR . 'inc/frontend/class-ig-chat-ajax.php';
 require_once WAR_PLUGIN_DIR . 'inc/shortcode.php';
 require_once WAR_PLUGIN_DIR . 'inc/admin/class-settings.php';
+require_once WAR_PLUGIN_DIR . 'inc/admin/class-integrations.php';
 require_once WAR_PLUGIN_DIR . 'inc/admin-refresh-cache.php';
 require_once WAR_PLUGIN_DIR . 'inc/cpt-affiliate-link.php';
 require_once WAR_PLUGIN_DIR . 'inc/meta-redirect-url.php';
@@ -117,6 +120,12 @@ if (class_exists('WAR_Front_Link_Manager')) {
 }
 if (class_exists('WAR_Ajax_Links')) {
 	WAR_Ajax_Links::init();
+}
+if (class_exists('WAR_IG_Chat_Shortcode')) {
+	WAR_IG_Chat_Shortcode::init();
+}
+if (class_exists('WAR_IG_Chat_Ajax')) {
+	WAR_IG_Chat_Ajax::init();
 }
 
 if (is_admin() && class_exists('WAR_Admin_Settings')) {

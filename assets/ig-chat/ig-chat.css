@@ -1,0 +1,241 @@
+:root{
+  --war-ig-bg:#0c0f14;
+  --war-ig-panel:#121622;
+  --war-ig-panel-2:#0f1320;
+  --war-ig-text:#e8ebf3;
+  --war-ig-muted:#aab1c7;
+  --war-ig-bubble-in:#1b2130;
+  --war-ig-bubble-out:#7a3cff;
+  --war-ig-stroke:rgba(255,255,255,.08);
+  --war-ig-shadow:0 14px 40px rgba(0,0,0,.45);
+}
+
+.war-ig-chat, .war-ig-chat *{
+  box-sizing:border-box;
+}
+
+.war-ig-chat{
+  width:100%;
+  display:flex;
+  justify-content:center;
+  padding:16px 10px;
+}
+
+.war-ig-chat__panel{
+  width:min(420px, 96vw);
+  height:min(780px, 90vh);
+  background:var(--war-ig-panel);
+  border-radius:22px;
+  border:1px solid var(--war-ig-stroke);
+  box-shadow:var(--war-ig-shadow);
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  color:var(--war-ig-text);
+  font-family:system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}
+
+/* HEADER */
+.war-ig-header{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:14px;
+  border-bottom:1px solid var(--war-ig-stroke);
+}
+
+.war-ig-back{
+  background:none;
+  border:0;
+  color:var(--war-ig-text);
+  font-size:18px;
+  cursor:default;
+  opacity:.65;
+}
+
+.war-ig-avatar{
+  width:42px;
+  height:42px;
+  border-radius:50%;
+  overflow:hidden;
+  border:2px solid var(--war-ig-bubble-out);
+  display:grid;
+  place-items:center;
+  background:rgba(255,255,255,.03);
+}
+.war-ig-avatar img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+
+.war-ig-title{
+  display:flex;
+  flex-direction:column;
+  min-width:0;
+}
+.war-ig-name{
+  font-weight:800;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.war-ig-status{
+  font-size:12px;
+  color:var(--war-ig-muted);
+}
+
+/* MENSAGENS */
+.war-ig-messages{
+  flex:1;
+  padding:16px;
+  overflow-y:auto;
+  background:var(--war-ig-panel-2);
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+.war-ig-row{
+  display:flex;
+}
+.war-ig-row--in{ justify-content:flex-start; }
+.war-ig-row--out{ justify-content:flex-end; }
+
+.war-ig-bubble{
+  max-width:78%;
+  padding:12px;
+  border-radius:18px;
+  border:1px solid var(--war-ig-stroke);
+  font-size:14px;
+  line-height:1.4;
+  min-width:0;
+}
+.war-ig-bubble--in{ background:var(--war-ig-bubble-in); }
+.war-ig-bubble--out{ background:var(--war-ig-bubble-out); }
+
+.war-ig-text{
+  font-size:14px;
+}
+.war-ig-muted{
+  font-size:13px;
+  color:var(--war-ig-muted);
+  margin-top:6px;
+}
+
+/* CARD (mensagem recebida com CTA) */
+.war-ig-card{
+  margin-top:10px;
+  border-radius:14px;
+  border:1px solid var(--war-ig-stroke);
+  overflow:hidden;
+  background:rgba(0,0,0,.08);
+}
+.war-ig-card__body{
+  padding:12px;
+}
+.war-ig-card__headline{
+  font-weight:800;
+  margin-bottom:6px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.war-ig-card__subtitle{
+  color:var(--war-ig-muted);
+  font-size:13px;
+  line-height:1.35;
+  display:-webkit-box;
+  -webkit-line-clamp:3;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+.war-ig-card__btn{
+  margin-top:10px;
+  width:100%;
+  border:0;
+  border-radius:12px;
+  padding:10px 12px;
+  background:var(--war-ig-bubble-out);
+  color:#fff;
+  font-weight:800;
+  text-align:center;
+  text-decoration:none;
+  display:block;
+}
+
+/* DIGITANDO */
+.war-ig-typing{
+  display:flex;
+  gap:4px;
+  align-items:center;
+  padding:12px 14px;
+}
+.war-ig-typing span{
+  width:6px;
+  height:6px;
+  background:var(--war-ig-muted);
+  border-radius:50%;
+  animation:war-ig-blink 1.4s infinite both;
+}
+.war-ig-typing span:nth-child(2){ animation-delay:.2s; }
+.war-ig-typing span:nth-child(3){ animation-delay:.4s; }
+
+@keyframes war-ig-blink{
+  0%{ opacity:.2 }
+  20%{ opacity:1 }
+  100%{ opacity:.2 }
+}
+
+/* INPUT */
+.war-ig-input{
+  display:flex;
+  gap:8px;
+  padding:12px;
+  border-top:1px solid var(--war-ig-stroke);
+  background:var(--war-ig-panel);
+}
+.war-ig-input__field{
+  flex:1;
+  min-width:0;
+  background:#0b0f19;
+  border:1px solid var(--war-ig-stroke);
+  border-radius:999px;
+  padding:10px 14px;
+  color:var(--war-ig-text);
+  outline:none;
+}
+.war-ig-input__field::placeholder{
+  color:var(--war-ig-muted);
+}
+
+.war-ig-send{
+  width:42px;
+  height:42px;
+  border-radius:50%;
+  border:0;
+  background:var(--war-ig-bubble-out);
+  color:#fff;
+  cursor:pointer;
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+}
+.war-ig-send[disabled]{
+  opacity:.7;
+  cursor:not-allowed;
+}
+.war-ig-send img{
+  width:22px;
+  height:22px;
+  object-fit:contain;
+  display:block;
+}
+
+@media (max-width: 420px){
+  .war-ig-chat__panel{ height:min(720px, 92vh); }
+  .war-ig-messages{ padding:14px; }
+}
+
+

@@ -13,10 +13,12 @@ class WAR_Admin_Settings {
 	const OPTION_KEY = 'war_ui_settings';
 	const MENU_SLUG = 'war-affiliate-links';
 	const STYLES_SLUG = 'war-affiliate-links-styles';
+	const INTEGRATIONS_SLUG = 'war-affiliate-links-integrations';
 
 	public static function init() {
 		add_action('admin_menu', [__CLASS__, 'register_menu']);
 		add_action('admin_init', [__CLASS__, 'register_settings']);
+		add_action('admin_init', [__CLASS__, 'register_integrations_settings']);
 		add_action('admin_enqueue_scripts', [__CLASS__, 'enqueue_assets']);
 	}
 
@@ -79,6 +81,20 @@ class WAR_Admin_Settings {
 			self::STYLES_SLUG,
 			[__CLASS__, 'render_page']
 		);
+
+		// Submenu: Integrações (Chat IG).
+		add_submenu_page(
+			self::MENU_SLUG,
+			__('Integrações', WAR_TEXT_DOMAIN),
+			__('Integrações', WAR_TEXT_DOMAIN),
+			'manage_options',
+			self::INTEGRATIONS_SLUG,
+			function () {
+				if (class_exists('WAR_Admin_Integrations')) {
+					WAR_Admin_Integrations::render_page();
+				}
+			}
+		);
 	}
 
 	public static function redirect_to_links() {
@@ -113,6 +129,12 @@ class WAR_Admin_Settings {
 		self::add_color_field('muted_color', __('Cor do texto secundário', WAR_TEXT_DOMAIN));
 		self::add_color_field('button_text_color', __('Cor do texto dos botões', WAR_TEXT_DOMAIN));
 		self::add_color_field('link_color', __('Cor dos links/ações', WAR_TEXT_DOMAIN));
+	}
+
+	public static function register_integrations_settings() {
+		if (class_exists('WAR_Admin_Integrations')) {
+			WAR_Admin_Integrations::register_settings();
+		}
 	}
 
 	private static function add_color_field($key, $label) {

@@ -23,6 +23,31 @@
 ### Meta
 - N/A
 
+## 0.3.0 - 2026-01-03
+
+### Breaking
+- N/A
+
+### Removed
+- N/A
+
+### Added
+- Shortcode `[war_ig_chat]`: simulador de Direct (Instagram-like) com mensagens, “digitando…”, card de resposta e auto-scroll.
+- Submenu **Integrações** (Affiliate Links → Integrações) com configurações globais do Chat IG (webhook, header, ícone enviar, textos, secret, rate limit).
+- Endpoint AJAX `war_ig_chat_send` (proxy do webhook) com nonce, rate limit por sessão e assinatura HMAC opcional.
+
+### Changed
+- N/A
+
+### UI (Cards)
+- N/A
+
+### Fixed
+- N/A
+
+### Meta
+- N/A
+
 ## 0.2.5 - 2026-01-03
 
 ### Breaking
