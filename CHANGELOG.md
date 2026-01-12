@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## 0.4.0 - 2026-01-12
+
 ### Breaking
 - N/A
 
@@ -9,7 +11,9 @@
 - N/A
 
 ### Added
-- N/A
+- Gerador de QR Code para links de redirecionamento com download automático.
+- Sistema de keywords nos links para resposta automática no Chat IG sem necessidade de webhook externo.
+- Keywords são buscadas localmente primeiro, com fallback para webhook quando configurado.
 
 ### Changed
 - N/A
@@ -21,7 +25,7 @@
 - N/A
 
 ### Meta
-- N/A
+- c3361de - chore(release): v0.4.0
 
 ## 0.3.0 - 2026-01-03
 
