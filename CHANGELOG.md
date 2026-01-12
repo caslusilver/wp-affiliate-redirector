@@ -23,7 +23,7 @@
 - Corrige empacotamento do plugin: inclui o arquivo `inc/admin/class-qrcode-ajax.php` no repositório e no ZIP de release (evita fatal na ativação).
 
 ### Meta
-- c767e3a - chore(release): v0.4.1
+- 2cb9a2d - chore(release): v0.4.1
 
 ## 0.3.0 - 2026-01-03
 
