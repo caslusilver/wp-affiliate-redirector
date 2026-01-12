@@ -109,6 +109,7 @@ require_once WAR_PLUGIN_DIR . 'inc/frontend/class-ig-chat-ajax.php';
 require_once WAR_PLUGIN_DIR . 'inc/shortcode.php';
 require_once WAR_PLUGIN_DIR . 'inc/admin/class-settings.php';
 require_once WAR_PLUGIN_DIR . 'inc/admin/class-integrations.php';
+require_once WAR_PLUGIN_DIR . 'inc/admin/class-qrcode-ajax.php';
 require_once WAR_PLUGIN_DIR . 'inc/admin-refresh-cache.php';
 require_once WAR_PLUGIN_DIR . 'inc/cpt-affiliate-link.php';
 require_once WAR_PLUGIN_DIR . 'inc/meta-redirect-url.php';
@@ -130,6 +131,10 @@ if (class_exists('WAR_IG_Chat_Ajax')) {
 
 if (is_admin() && class_exists('WAR_Admin_Settings')) {
 	WAR_Admin_Settings::init();
+}
+
+if (class_exists('WAR_QRCode_Ajax')) {
+	WAR_QRCode_Ajax::init();
 }
 
 

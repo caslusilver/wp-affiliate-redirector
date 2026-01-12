@@ -2,30 +2,10 @@
 
 ## [Unreleased]
 
-## 0.4.0 - 2026-01-12
-
-### Breaking
-- N/A
-
-### Removed
-- N/A
-
-### Added
-- Gerador de QR Code para links de redirecionamento com download automático.
-- Sistema de keywords nos links para resposta automática no Chat IG sem necessidade de webhook externo.
-- Keywords são buscadas localmente primeiro, com fallback para webhook quando configurado.
-
 ### Changed
-- N/A
-
-### UI (Cards)
-- N/A
-
-### Fixed
-- N/A
-
-### Meta
-- 820e751 - chore(release): v0.4.0
+- **Versão atual**: v0.3.0  
+  **Versão sugerida após a mudança**: v0.4.0  
+  **Descrição**: Adicionado gerador de QR Code para links de redirecionamento com download automático; Implementado sistema de keywords nos links para resposta automática no Chat IG sem necessidade de webhook externo; Keywords são buscadas localmente primeiro, com fallback para webhook quando configurado.
 
 ## 0.3.0 - 2026-01-03
 
