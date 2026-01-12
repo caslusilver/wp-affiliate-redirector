@@ -73,16 +73,25 @@ class WAR_Front_Link_Manager {
 
 		$is_debug = class_exists('WAR_Config') ? (bool) WAR_Config::is_debug() : false;
 
+		$icon_copy = 'assets/icons/copy.webp';
+		$icon_graph = 'assets/icons/contador_clicks.PNG';
+		$icon_edit = 'assets/icons/editing.png';
+		$icon_delete = 'assets/icons/delete.png';
+		$icon_qrcode = 'assets/icons/qr-code.png';
+
 		wp_localize_script('war-link-manager', 'WARLinkManager', [
 			'ajax_url' => admin_url('admin-ajax.php'),
 			'nonce' => wp_create_nonce(self::NONCE_ACTION),
+			'qrcode_nonce' => wp_create_nonce('war_qrcode_nonce'),
 			'per_page' => 20,
 			'debug' => $is_debug,
 			'go_base' => esc_url_raw(home_url('/go/')),
-			'copy_icon_url' => esc_url_raw(WAR_PLUGIN_URL . 'assets/icons/copy.webp'),
-			'graph_icon_url' => esc_url_raw(WAR_PLUGIN_URL . 'assets/icons/contador_clicks.PNG'),
-			'edit_icon_url' => esc_url_raw(WAR_PLUGIN_URL . 'assets/icons/editing.png'),
-			'delete_icon_url' => esc_url_raw(WAR_PLUGIN_URL . 'assets/icons/delete.png'),
+			// Só define URLs locais se os assets existirem (senão, o JS usa fallbacks externos).
+			'copy_icon_url' => file_exists(WAR_PLUGIN_DIR . $icon_copy) ? esc_url_raw(WAR_PLUGIN_URL . $icon_copy) : '',
+			'graph_icon_url' => file_exists(WAR_PLUGIN_DIR . $icon_graph) ? esc_url_raw(WAR_PLUGIN_URL . $icon_graph) : '',
+			'edit_icon_url' => file_exists(WAR_PLUGIN_DIR . $icon_edit) ? esc_url_raw(WAR_PLUGIN_URL . $icon_edit) : '',
+			'delete_icon_url' => file_exists(WAR_PLUGIN_DIR . $icon_delete) ? esc_url_raw(WAR_PLUGIN_URL . $icon_delete) : '',
+			'qrcode_icon_url' => file_exists(WAR_PLUGIN_DIR . $icon_qrcode) ? esc_url_raw(WAR_PLUGIN_URL . $icon_qrcode) : '',
 			'strings' => [
 				'no_permission' => 'Você não tem permissão para usar este painel.',
 				'confirm_delete' => 'Tem certeza que deseja deletar este link?',

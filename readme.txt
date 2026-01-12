@@ -4,7 +4,7 @@ Tags: afiliados, redirect, cloaking, links
 Requires at least: 5.8
 Tested up to: 6.5
 Requires PHP: 7.4
-Stable tag: 0.0.1
+Stable tag: 0.4.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -55,7 +55,11 @@ Não nesta versão. O tracking deve ser feito externamente (pixels Meta, Google 
 
 == Changelog ==
 
-= 0.0.1 =
-* Release inicial.
+= 0.4.1 =
+* Corrige empacotamento: inclui arquivo `inc/admin/class-qrcode-ajax.php` no release (evita fatal na ativação).
+
+= 0.4.0 =
+* Gerador de QR Code no painel do Link Manager.
+* Suporte a Keywords nos links para resposta automática no Chat IG (modo local) com fallback para webhook.
 
 

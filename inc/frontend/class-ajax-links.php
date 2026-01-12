@@ -59,6 +59,8 @@ class WAR_Ajax_Links {
 		$per_page = isset($_POST['per_page']) ? max(1, min(100, absint($_POST['per_page']))) : 20;
 		$search = isset($_POST['search']) ? sanitize_text_field((string) wp_unslash($_POST['search'])) : '';
 
+		WAR_Debug::log('AJAX Links: Listando', ['page' => $page, 'per_page' => $per_page, 'search' => $search]);
+
 		$args = [
 			'post_type' => 'war_link',
 			'post_status' => 'publish',
@@ -83,8 +85,11 @@ class WAR_Ajax_Links {
 				'public_url' => get_permalink($post_id),
 				'destination' => (string) get_post_meta($post_id, $meta_key, true),
 				'clicks_total' => (int) get_post_meta($post_id, 'war_clicks_total', true),
+				'keywords' => (string) get_post_meta($post_id, 'war_keywords', true),
 			];
 		}
+
+		WAR_Debug::log('AJAX Links: Lista gerada', ['count' => count($items), 'total' => $q->found_posts]);
 
 		$total = (int) $q->found_posts;
 		$total_pages = (int) $q->max_num_pages;
@@ -104,6 +109,14 @@ class WAR_Ajax_Links {
 		$title = isset($_POST['title']) ? sanitize_text_field((string) wp_unslash($_POST['title'])) : '';
 		$slug = isset($_POST['slug']) ? sanitize_title((string) wp_unslash($_POST['slug'])) : '';
 		$destination = isset($_POST['destination']) ? self::sanitize_destination(wp_unslash($_POST['destination'])) : '';
+		$keywords = isset($_POST['keywords']) ? sanitize_textarea_field((string) wp_unslash($_POST['keywords'])) : '';
+
+		WAR_Debug::log('AJAX Links: Criando', [
+			'title' => $title,
+			'slug' => $slug,
+			'destination' => $destination,
+			'keywords' => $keywords,
+		]);
 
 		if ($title === '') {
 			wp_send_json_error(['message' => 'Título é obrigatório.'], 400);
@@ -126,10 +139,18 @@ class WAR_Ajax_Links {
 
 		$post_id = wp_insert_post($postarr, true);
 		if (is_wp_error($post_id)) {
+			WAR_Debug::log('AJAX Links: Erro ao criar', ['error' => $post_id->get_error_message()]);
 			wp_send_json_error(['message' => $post_id->get_error_message()], 500);
 		}
 
 		update_post_meta($post_id, self::meta_key_redirect_url(), $destination);
+
+		if ($keywords !== '') {
+			update_post_meta($post_id, 'war_keywords', trim($keywords));
+			WAR_Debug::log('AJAX Links: Keywords salvas', ['post_id' => $post_id, 'keywords' => $keywords]);
+		}
+
+		WAR_Debug::log('AJAX Links: Criado com sucesso', ['post_id' => $post_id]);
 
 		wp_send_json_success([
 			'id' => (int) $post_id,
@@ -150,6 +171,14 @@ class WAR_Ajax_Links {
 
 		$title = isset($_POST['title']) ? sanitize_text_field((string) wp_unslash($_POST['title'])) : '';
 		$destination = isset($_POST['destination']) ? self::sanitize_destination(wp_unslash($_POST['destination'])) : '';
+		$keywords = isset($_POST['keywords']) ? sanitize_textarea_field((string) wp_unslash($_POST['keywords'])) : '';
+
+		WAR_Debug::log('AJAX Links: Atualizando', [
+			'post_id' => $post_id,
+			'title' => $title,
+			'destination' => $destination,
+			'keywords' => $keywords,
+		]);
 
 		if ($title === '') {
 			wp_send_json_error(['message' => 'Título é obrigatório.'], 400);
@@ -165,10 +194,21 @@ class WAR_Ajax_Links {
 		], true);
 
 		if (is_wp_error($res)) {
+			WAR_Debug::log('AJAX Links: Erro ao atualizar', ['error' => $res->get_error_message()]);
 			wp_send_json_error(['message' => $res->get_error_message()], 500);
 		}
 
 		update_post_meta($post_id, self::meta_key_redirect_url(), $destination);
+
+		if ($keywords !== '') {
+			update_post_meta($post_id, 'war_keywords', trim($keywords));
+			WAR_Debug::log('AJAX Links: Keywords atualizadas', ['post_id' => $post_id, 'keywords' => $keywords]);
+		} else {
+			delete_post_meta($post_id, 'war_keywords');
+			WAR_Debug::log('AJAX Links: Keywords removidas', ['post_id' => $post_id]);
+		}
+
+		WAR_Debug::log('AJAX Links: Atualizado com sucesso', ['post_id' => $post_id]);
 
 		wp_send_json_success(['id' => $post_id]);
 	}

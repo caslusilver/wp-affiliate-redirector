@@ -52,14 +52,20 @@ jobs:
               sha: context.sha
             });
 
+      - name: Build plugin ZIP (git archive)
+        if: steps.tag_creation.outputs.tag_exists != 'true'
+        run: |
+          git archive --format=zip --prefix=wp-affiliate-redirector/ -o wp-affiliate-redirector.zip HEAD
+
       - name: Create GitHub Release
         if: steps.tag_creation.outputs.tag_exists != 'true'
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v${{ steps.get_version.outputs.version }}
           name: "Release v${{ steps.get_version.outputs.version }}"
+          files: |
+            wp-affiliate-redirector.zip
           body: |
             Release automática gerada pelo GitHub Actions.
             Arquivo principal: ${{ steps.get_version.outputs.plugin_file }}
-
 

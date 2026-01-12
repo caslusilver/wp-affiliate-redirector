@@ -1,0 +1,5 @@
+.cursor/ export-ignore
+.github/ export-ignore
+docs/ export-ignore
+blueprint* export-ignore
+CHANGELOG.md export-ignore

@@ -12,6 +12,8 @@
   var graphIconUrl = cfg.graph_icon_url || 'https://casluads.com.br/wp-content/uploads/2026/01/IMG_8972.png';
   var editIconUrl = cfg.edit_icon_url || 'https://casluads.com.br/wp-content/uploads/2026/01/editing.png';
   var deleteIconUrl = cfg.delete_icon_url || 'https://casluads.com.br/wp-content/uploads/2026/01/app.png';
+  var qrcodeIconUrl = cfg.qrcode_icon_url || '';
+  var qrcodeNonce = cfg.qrcode_nonce || '';
 
   function $find(root, sel) { return root.find(sel); }
 
@@ -158,6 +160,7 @@
       html += '<div class="war-item" data-id="' + escapeHtml(it.id) + '"' +
         ' data-war-slug="' + escapeHtml(it.slug || '') + '"' +
         ' data-war-destination="' + escapeHtml(it.destination || '') + '"' +
+        ' data-war-keywords="' + escapeHtml(it.keywords || '') + '"' +
       '>' +
         '<div class="war-item__left">' +
           '<div class="war-item__title">' + escapeHtml(it.title) + '</div>' +
@@ -168,6 +171,9 @@
             '</button>' +
           '</div>' +
           '<div class="war-item__actions">' +
+            (qrcodeIconUrl ? '<button type="button" class="war-action-icon" aria-label="Gerar QR Code" data-war-qrcode="' + escapeHtml(it.id) + '">' +
+              '<img class="war-action-icon__img" src="' + escapeHtml(qrcodeIconUrl) + '" alt="QR Code" />' +
+            '</button>' : '') +
             '<button type="button" class="war-action-icon" aria-label="Editar" data-war-edit="1">' +
               '<img class="war-action-icon__img" src="' + escapeHtml(editIconUrl) + '" alt="Editar" />' +
             '</button>' +
@@ -234,6 +240,7 @@
     $find($form, '[data-war-field="title"]').val('');
     $find($form, '[data-war-field="slug"]').val('').prop('disabled', false);
     $find($form, '[data-war-field="destination"]').val('');
+    $find($form, '[data-war-field="keywords"]').val('');
     $find($form, '[data-war-action="submit"]').text(getStr('btn_create', 'Criar'));
     $find($form, '[data-war-action="cancel"]').hide();
     $find(root, '[data-war-form-title="1"]').text(getStr('btn_create', 'Criar'));
@@ -245,6 +252,7 @@
     $find($form, '[data-war-field="title"]').val(item.title || '');
     $find($form, '[data-war-field="slug"]').val(item.slug || '').prop('disabled', true);
     $find($form, '[data-war-field="destination"]').val(item.destination || '');
+    $find($form, '[data-war-field="keywords"]').val(item.keywords || '');
     $find($form, '[data-war-action="submit"]').text(getStr('btn_update', 'Atualizar'));
     $find($form, '[data-war-action="cancel"]').show();
     $find(root, '[data-war-form-title="1"]').text('Editar');
@@ -256,7 +264,8 @@
       title: $tr.find('.war-item__title').text().trim(),
       slug: ($tr.attr('data-war-slug') || '').trim(),
       public_url: $tr.find('a').attr('href') || '',
-      destination: ($tr.attr('data-war-destination') || '').trim()
+      destination: ($tr.attr('data-war-destination') || '').trim(),
+      keywords: ($tr.attr('data-war-keywords') || '').trim()
     };
   }
 
@@ -378,6 +387,52 @@
       setView(root, 'list');
     });
 
+    // QR Code download
+    root.on('click', '[data-war-qrcode]', function () {
+      var linkId = parseInt($(this).attr('data-war-qrcode'), 10) || 0;
+      if (!linkId || !qrcodeNonce) {
+        debugAppend({ ts: Date.now(), type: 'qrcode_error', message: 'Link ID ou nonce inválido', linkId: linkId, hasNonce: !!qrcodeNonce });
+        alert('Erro: configuração inválida.');
+        return;
+      }
+
+      var $btn = $(this);
+      $btn.addClass('war-loading');
+      debugAppend({ ts: Date.now(), type: 'qrcode_request', linkId: linkId });
+
+      fetch(ajaxUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          action: 'war_generate_qrcode',
+          nonce: qrcodeNonce,
+          link_id: linkId
+        })
+      })
+      .then(function (r) { return r.json(); })
+      .then(function (res) {
+        $btn.removeClass('war-loading');
+        debugAppend({ ts: Date.now(), type: 'qrcode_response', response: res });
+        if (!res || !res.success) {
+          alert((res && res.data && res.data.message) ? res.data.message : 'Erro ao gerar QR Code');
+          return;
+        }
+        // Trigger download
+        var a = document.createElement('a');
+        a.href = res.data.image;
+        a.download = res.data.filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        debugAppend({ ts: Date.now(), type: 'qrcode_download', filename: res.data.filename });
+      })
+      .catch(function (err) {
+        $btn.removeClass('war-loading');
+        debugAppend({ ts: Date.now(), type: 'qrcode_error', error: String(err) });
+        alert('Erro de conexão');
+      });
+    });
+
     // submit form (create/update)
     root.on('submit', '[data-war-form="1"]', function (e) {
       e.preventDefault();
@@ -386,6 +441,7 @@
       var title = ($find($form, '[data-war-field="title"]').val() || '').trim();
       var slug = ($find($form, '[data-war-field="slug"]').val() || '').trim();
       var destination = ($find($form, '[data-war-field="destination"]').val() || '').trim();
+      var keywords = ($find($form, '[data-war-field="keywords"]').val() || '').trim();
 
       if (!title || !destination) {
         setStatus(root, getStr('status_fill', 'Preencha título e destino.'));
@@ -393,7 +449,7 @@
       }
 
       var action = id ? 'war_links_update' : 'war_links_create';
-      var payload = { id: id, title: title, slug: slug, destination: destination };
+      var payload = { id: id, title: title, slug: slug, destination: destination, keywords: keywords };
       setStatus(root, id ? getStr('status_updated', 'Atualizando...') : getStr('status_created', 'Criando...'));
 
       post(action, payload)

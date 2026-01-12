@@ -77,18 +77,42 @@ class WAR_IG_Chat_Ajax {
 		$timestamp = isset($_POST['timestamp']) ? sanitize_text_field((string) wp_unslash($_POST['timestamp'])) : '';
 		$referrer = isset($_POST['referrer']) ? esc_url_raw((string) wp_unslash($_POST['referrer'])) : '';
 
+		WAR_Debug::log('IG Chat: Recebida requisição', [
+			'keyword' => $keyword,
+			'session_id' => $session_id,
+			'page_slug' => $page_slug,
+		]);
+
 		if ($keyword === '') {
+			WAR_Debug::log('IG Chat: Keyword vazia');
 			wp_send_json_error(['message' => 'Keyword vazia.'], 400);
 		}
 
 		$settings = self::settings();
-		$webhook_url = (string) ($settings['webhook_url'] ?? '');
-		if ($webhook_url === '') {
-			wp_send_json_error(['message' => 'Webhook não configurado.'], 500);
-		}
-
 		$rate_limit_ms = (int) ($settings['rate_limit_ms'] ?? 2500);
 		self::guard_rate_limit($session_id, $rate_limit_ms);
+
+		// ========================================
+		// NOVO: Busca local por keyword primeiro
+		// ========================================
+		WAR_Debug::log('IG Chat: Buscando keyword localmente', ['keyword' => $keyword]);
+		$local_result = war_find_link_by_keyword($keyword);
+		if ($local_result) {
+			WAR_Debug::log('IG Chat: Link encontrado localmente', ['result' => $local_result]);
+			wp_send_json_success($local_result);
+			return; // Encerra aqui, sem chamar webhook
+		}
+
+		WAR_Debug::log('IG Chat: Nenhum link local encontrado, tentando webhook');
+
+		// ========================================
+		// FALLBACK: Chama webhook se configurado
+		// ========================================
+		$webhook_url = (string) ($settings['webhook_url'] ?? '');
+		if ($webhook_url === '') {
+			WAR_Debug::log('IG Chat: Webhook não configurado');
+			wp_send_json_error(['message' => 'Nenhum link encontrado para essa palavra-chave.'], 404);
+		}
 
 		$payload = [
 			'keyword' => $keyword,
@@ -112,27 +136,35 @@ class WAR_IG_Chat_Ajax {
 			'body' => $body,
 		];
 
+		WAR_Debug::log('IG Chat: Chamando webhook', ['webhook_url' => $webhook_url]);
 		$res = wp_remote_post($webhook_url, $args);
 		if (is_wp_error($res)) {
+			WAR_Debug::log('IG Chat: Erro no webhook', ['error' => $res->get_error_message()]);
 			wp_send_json_error(['message' => $res->get_error_message()], 502);
 		}
 
 		$code = (int) wp_remote_retrieve_response_code($res);
 		$raw_body = (string) wp_remote_retrieve_body($res);
+		WAR_Debug::log('IG Chat: Resposta do webhook', ['code' => $code, 'body_length' => strlen($raw_body)]);
+
 		$json = json_decode($raw_body, true);
 		if (!is_array($json)) {
+			WAR_Debug::log('IG Chat: Resposta inválida do webhook', ['raw_body' => substr($raw_body, 0, 200)]);
 			wp_send_json_error(['message' => 'Resposta inválida do webhook.'], 502);
 		}
 
 		$normalized = self::normalize_response($json);
 		if (!$normalized) {
+			WAR_Debug::log('IG Chat: Payload incompleto do webhook', ['json' => $json]);
 			wp_send_json_error(['message' => 'Webhook retornou payload incompleto.'], 502);
 		}
 
 		if ($code < 200 || $code >= 300) {
+			WAR_Debug::log('IG Chat: Webhook retornou erro', ['code' => $code]);
 			wp_send_json_error(['message' => 'Webhook retornou erro.'], 502);
 		}
 
+		WAR_Debug::log('IG Chat: Sucesso via webhook', ['normalized' => $normalized]);
 		wp_send_json_success($normalized);
 	}
 }

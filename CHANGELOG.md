@@ -2,11 +2,15 @@
 
 ## [Unreleased]
 
+## 0.4.1 - 2026-01-12
+
+### Fixed
+- Corrige empacotamento do plugin: inclui o arquivo `inc/admin/class-qrcode-ajax.php` no repositório e no ZIP de release (evita fatal na ativação).
+
 ### Changed
 - **Versão atual**: v0.3.0  
   **Versão sugerida após a mudança**: v0.4.0  
-  **Descrição**: Adicionado gerador de QR Code para links de redirecionamento com download automático; Implementado sistema de keywords nos links para resposta automática no Chat IG sem necessidade de webhook externo; Keywords são buscadas localmente primeiro, com fallback para webhook quando configurado.
-  **Nota**: Versão 0.4.0 foi revertida devido a problemas que quebraram o plugin.
+  **Descrição**: Implementação do gerador de QR Code para links de redirecionamento com download automático; Adição de campo Keywords nos links para resposta automática no Chat IG sem webhook externo (modo local); Busca local por keywords tem prioridade sobre webhook, mantendo compatibilidade para integração futura com IA; Toda a implementação envolvida com debug para validação de execução.
 
 ## 0.3.0 - 2026-01-03
 

@@ -58,6 +58,12 @@ if (!defined('ABSPATH')) {
 					<div class="war-field__hint"><?php echo esc_html__('O slug será sugerido pelo título, mas você pode editar.', WAR_TEXT_DOMAIN); ?></div>
 				</label>
 
+				<label class="war-field">
+					<div class="war-field__label"><?php echo esc_html__('Keywords (Chat IG)', WAR_TEXT_DOMAIN); ?></div>
+					<textarea class="war-field__input" name="keywords" rows="3" placeholder="<?php echo esc_attr__('pdf, ebook, baixar, download', WAR_TEXT_DOMAIN); ?>" data-war-field="keywords"></textarea>
+					<div class="war-field__hint"><?php echo esc_html__('Separe as palavras por vírgula. Não diferencia maiúsculas/minúsculas.', WAR_TEXT_DOMAIN); ?></div>
+				</label>
+
 				<div class="war-form__actions">
 					<button type="button" class="war-btn" data-war-close-create="1"><?php echo esc_html__('Voltar', WAR_TEXT_DOMAIN); ?></button>
 					<button type="submit" class="war-btn war-btn--primary" data-war-action="submit"><?php echo esc_html__('Criar', WAR_TEXT_DOMAIN); ?></button>

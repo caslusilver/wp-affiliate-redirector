@@ -389,6 +389,21 @@
   display: block;
   object-fit: contain;
 }
+
+.war-action-icon.war-loading {
+  opacity: 0.6;
+  cursor: wait;
+  pointer-events: none;
+}
+
+.war-action-icon.war-loading .war-action-icon__img {
+  animation: war-spin 1s linear infinite;
+}
+
+@keyframes war-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
 .war-icon-btn {
   appearance: none;
   border: 1px solid #dcdcde;
