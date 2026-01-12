@@ -2,10 +2,34 @@
 
 ## [Unreleased]
 
+## 0.4.0 - 2026-01-12
+
+### Breaking
+- N/A
+
+### Removed
+- N/A
+
+### Added
+- Gerador de QR Code: botão para gerar e baixar QR Code do link de redirecionamento diretamente do painel de gerenciamento
+- Keywords nos links: campo para associar palavras-chave aos links, permitindo resposta automática no Chat IG sem webhook externo
+- Sistema de debug aprimorado: logs persistentes armazenados em opção do WordPress para visualização posterior
+- Sub-aba de Logs no painel admin: página dedicada para visualizar, copiar e gerenciar logs do plugin, com indicador de status do debug
+
 ### Changed
-- **Versão atual**: v0.3.0  
-  **Versão sugerida após a mudança**: v0.4.0  
-  **Descrição**: Adicionado gerador de QR Code para links de redirecionamento com download automático; Implementado sistema de keywords nos links para resposta automática no Chat IG sem necessidade de webhook externo; Keywords são buscadas localmente primeiro, com fallback para webhook quando configurado.
+- Chat IG agora busca keywords localmente antes de chamar webhook (prioridade: keywords locais → webhook → erro)
+- Sistema de debug agora mantém histórico de logs para análise posterior
+
+### UI (Cards)
+- Botão de QR Code adicionado antes do botão de editar na lista de links
+- Campo de Keywords adicionado no formulário de criação/edição de links
+- Loading state visual para geração de QR Code
+
+### Fixed
+- N/A
+
+### Meta
+- 6955b87 - chore(release): v0.4.0
 
 ## 0.3.0 - 2026-01-03
 
