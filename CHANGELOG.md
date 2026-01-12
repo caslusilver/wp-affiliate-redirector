@@ -29,7 +29,7 @@
 - N/A
 
 ### Meta
-- 6955b87 - chore(release): v0.4.0
+- be54713 - chore(release): v0.4.0
 
 ## 0.3.0 - 2026-01-03
 
