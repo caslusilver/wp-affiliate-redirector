@@ -2,6 +2,31 @@
 
 ## [Unreleased]
 
+## 0.4.2 - 2026-01-12
+
+### Breaking
+- N/A
+
+### Removed
+- N/A
+
+### Added
+- N/A
+
+### Changed
+- Painel `[war_link_manager]` passa a exibir keywords no card e adiciona animação de confirmação ao salvar
+- Chat `[war_ig_chat]` mantém header/footer fixos com drop-shadow no footer e opção de minimizar para bolha flutuante
+- Integrações ganha toggles para habilitar webhook (fallback) e minimizar chat (ambos desabilitados por padrão)
+
+### UI (Cards)
+- N/A
+
+### Fixed
+- N/A
+
+### Meta
+- 1a92bd5 - chore(release): v0.4.2
+
 ## 0.4.1 - 2026-01-12
 
 ### Breaking
