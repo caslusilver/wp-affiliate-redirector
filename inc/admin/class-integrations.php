@@ -15,6 +15,8 @@ class WAR_Admin_Integrations {
 
 	public static function defaults() {
 		return [
+			// Webhook/IA (mantém desabilitado por padrão).
+			'webhook_enabled' => 0,
 			'webhook_url' => '',
 			'header_name' => 'Lucas Andrade',
 			'header_status' => 'Online agora',
@@ -24,6 +26,8 @@ class WAR_Admin_Integrations {
 			'error_message' => 'Tenta de novo.',
 			'secret' => '',
 			'rate_limit_ms' => 2500,
+			// UX do chat (widget)
+			'chat_minimize_enabled' => 0,
 		];
 	}
 
@@ -34,6 +38,7 @@ class WAR_Admin_Integrations {
 		$merged = array_merge($defaults, $raw);
 
 		return [
+			'webhook_enabled' => !empty($merged['webhook_enabled']),
 			'webhook_url' => esc_url_raw((string) $merged['webhook_url']),
 			'header_name' => sanitize_text_field((string) $merged['header_name']),
 			'header_status' => sanitize_text_field((string) $merged['header_status']),
@@ -43,6 +48,7 @@ class WAR_Admin_Integrations {
 			'error_message' => sanitize_text_field((string) $merged['error_message']),
 			'secret' => sanitize_text_field((string) $merged['secret']),
 			'rate_limit_ms' => max(0, (int) $merged['rate_limit_ms']),
+			'chat_minimize_enabled' => !empty($merged['chat_minimize_enabled']),
 		];
 	}
 
@@ -66,7 +72,19 @@ class WAR_Admin_Integrations {
 			'war_affiliate_links_integrations'
 		);
 
+		self::add_checkbox_field(
+			'webhook_enabled',
+			__('Habilitar webhook (fallback)', WAR_TEXT_DOMAIN),
+			__('Deixe desabilitado por enquanto. Quando habilitado, se nenhuma keyword local for encontrada, o chat chamará o webhook.', WAR_TEXT_DOMAIN)
+		);
 		self::add_text_field('webhook_url', __('Webhook URL', WAR_TEXT_DOMAIN), 'url', 'https://...');
+
+		self::add_checkbox_field(
+			'chat_minimize_enabled',
+			__('Permitir minimizar o chat em bolha flutuante', WAR_TEXT_DOMAIN),
+			__('Quando ativo, o botão ← minimiza o chat e mostra uma bolha no canto inferior direito.', WAR_TEXT_DOMAIN)
+		);
+
 		self::add_text_field('header_name', __('Nome exibido', WAR_TEXT_DOMAIN), 'text', '');
 		self::add_text_field('header_status', __('Status', WAR_TEXT_DOMAIN), 'text', __('Online agora', WAR_TEXT_DOMAIN));
 		self::add_text_field('header_avatar_url', __('Foto do perfil (URL)', WAR_TEXT_DOMAIN), 'url', 'https://...');
@@ -75,6 +93,27 @@ class WAR_Admin_Integrations {
 		self::add_text_field('error_message', __('Mensagem de erro', WAR_TEXT_DOMAIN), 'text', __('Tenta de novo.', WAR_TEXT_DOMAIN));
 		self::add_text_field('secret', __('Secret (HMAC)', WAR_TEXT_DOMAIN), 'text', '');
 		self::add_number_field('rate_limit_ms', __('Rate limit (ms)', WAR_TEXT_DOMAIN), 0, 60000, 100);
+	}
+
+	private static function add_checkbox_field($key, $label, $help = '') {
+		add_settings_field(
+			'war_int_' . $key,
+			$label,
+			function () use ($key, $help) {
+				$settings = self::get_settings();
+				$name = self::OPTION_KEY . '[' . $key . ']';
+				$checked = !empty($settings[$key]);
+				printf(
+					'<label><input type="checkbox" name="%s" value="1" %s /> %s</label>%s',
+					esc_attr($name),
+					checked($checked, true, false),
+					esc_html__('Ativo', WAR_TEXT_DOMAIN),
+					$help ? '<p class="description" style="margin:6px 0 0;">' . esc_html($help) . '</p>' : ''
+				);
+			},
+			'war_affiliate_links_integrations',
+			'war_integrations_section'
+		);
 	}
 
 	private static function add_text_field($key, $label, $type = 'text', $placeholder = '') {
@@ -146,6 +185,7 @@ class WAR_Admin_Integrations {
 
 		// Sanitiza e retorna o array final (o WP persiste automaticamente).
 		return [
+			'webhook_enabled' => !empty($merged['webhook_enabled']) ? 1 : 0,
 			'webhook_url' => esc_url_raw((string) $merged['webhook_url']),
 			'header_name' => sanitize_text_field((string) $merged['header_name']),
 			'header_status' => sanitize_text_field((string) $merged['header_status']),
@@ -155,6 +195,7 @@ class WAR_Admin_Integrations {
 			'error_message' => sanitize_text_field((string) $merged['error_message']),
 			'secret' => sanitize_text_field((string) $merged['secret']),
 			'rate_limit_ms' => max(0, (int) $merged['rate_limit_ms']),
+			'chat_minimize_enabled' => !empty($merged['chat_minimize_enabled']) ? 1 : 0,
 		];
 	}
 

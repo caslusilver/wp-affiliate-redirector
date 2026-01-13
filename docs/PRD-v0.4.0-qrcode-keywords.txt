@@ -1,0 +1,454 @@
+================================================================================
+PRD - WP AFFILIATE REDIRECTOR v0.4.0
+================================================================================
+Data: 12/01/2026
+Versão Atual: 0.3.0
+Nova Versão: 0.4.0
+
+================================================================================
+RESUMO DAS NOVAS FUNCIONALIDADES
+================================================================================
+
+1. GERADOR DE QR CODE
+   - Botão para gerar QR Code do link de redirecionamento
+   - Download automático da imagem PNG
+
+2. KEYWORDS NOS LINKS (CHAT IG - MODO LOCAL)
+   - Campo "Keyword" na criação/edição de links
+   - Resposta automática no Chat IG sem precisar de webhook externo
+   - Mantém compatibilidade com webhook para futura integração com IA
+
+================================================================================
+FUNCIONALIDADE 1: GERADOR DE QR CODE
+================================================================================
+
+OBJETIVO:
+Permitir que o usuário gere e baixe um QR Code do link de redirecionamento
+com um único clique, diretamente do painel de gerenciamento de links.
+
+--------------------------------------------------------------------------------
+ESPECIFICAÇÕES TÉCNICAS
+--------------------------------------------------------------------------------
+
+API EXTERNA:
+  URL Base: https://api.qrserver.com/v1/create-qr-code/
+  Parâmetros:
+    - size: 300x300 (sugestão para qualidade)
+    - data: URL do link de redirecionamento (ex: https://seusite.com/go/meu-link)
+  
+  Exemplo completo:
+  https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://seusite.com/go/meu-link
+
+ÍCONE:
+  Arquivo: assets/icons/qr-code.png (já copiado para o plugin)
+  Posição: ANTES do ícone de configurações (engrenagem/editar) na lista de links
+  Tamanho sugerido: 20x20px ou equivalente aos outros ícones
+
+--------------------------------------------------------------------------------
+FLUXO DO USUÁRIO
+--------------------------------------------------------------------------------
+
+1. Usuário acessa o painel de links (shortcode [war_link_manager] ou wp-admin)
+2. Na linha de cada link, aparece o ícone de QR Code antes dos outros ícones
+3. Usuário clica no ícone de QR Code
+4. Sistema faz chamada AJAX para endpoint interno do plugin
+5. Endpoint interno faz requisição GET para a API do QR Server
+6. Imagem retornada é convertida para blob/base64
+7. Download automático é disparado com nome: "qrcode-{slug-do-link}.png"
+
+--------------------------------------------------------------------------------
+ARQUIVOS A MODIFICAR/CRIAR
+--------------------------------------------------------------------------------
+
+1. inc/frontend/class-link-manager.php
+   - Adicionar botão de QR Code no template de cada card de link
+
+2. inc/admin/class-qrcode-ajax.php (NOVO)
+   - Endpoint AJAX: war_generate_qrcode
+   - Recebe: link_id (int)
+   - Valida: permissões, existência do link
+   - Busca: permalink do link
+   - Chama: API externa do QR Server
+   - Retorna: imagem em base64 ou URL para download
+
+3. assets/js/manager.js
+   - Adicionar handler para clique no botão QR Code
+   - Implementar download automático via JavaScript
+   - Mostrar loading durante geração
+
+4. assets/css/manager.css
+   - Estilização do botão/ícone de QR Code
+
+5. templates/link-manager.php
+   - Incluir botão de QR Code na estrutura HTML do card
+
+--------------------------------------------------------------------------------
+CÓDIGO SUGERIDO - AJAX HANDLER (PHP)
+--------------------------------------------------------------------------------
+
+class WAR_QRCode_Ajax {
+    const NONCE_ACTION = 'war_qrcode_nonce';
+
+    public static function init() {
+        add_action('wp_ajax_war_generate_qrcode', [__CLASS__, 'handle_generate']);
+    }
+
+    public static function handle_generate() {
+        check_ajax_referer(self::NONCE_ACTION, 'nonce');
+
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(['message' => 'Sem permissão.'], 403);
+        }
+
+        $link_id = isset($_POST['link_id']) ? absint($_POST['link_id']) : 0;
+        if (!$link_id || get_post_type($link_id) !== 'war_link') {
+            wp_send_json_error(['message' => 'Link inválido.'], 400);
+        }
+
+        $permalink = get_permalink($link_id);
+        if (!$permalink) {
+            wp_send_json_error(['message' => 'Permalink não encontrado.'], 404);
+        }
+
+        $qr_url = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' 
+                  . urlencode($permalink);
+
+        $response = wp_remote_get($qr_url, ['timeout' => 15]);
+        if (is_wp_error($response)) {
+            wp_send_json_error(['message' => 'Erro ao gerar QR Code.'], 502);
+        }
+
+        $image_data = wp_remote_retrieve_body($response);
+        $base64 = base64_encode($image_data);
+        $slug = get_post_field('post_name', $link_id);
+
+        wp_send_json_success([
+            'image' => 'data:image/png;base64,' . $base64,
+            'filename' => 'qrcode-' . $slug . '.png',
+        ]);
+    }
+}
+
+--------------------------------------------------------------------------------
+CÓDIGO SUGERIDO - DOWNLOAD (JavaScript)
+--------------------------------------------------------------------------------
+
+function downloadQRCode(linkId) {
+    var btn = document.querySelector('[data-qrcode-btn="' + linkId + '"]');
+    if (btn) btn.classList.add('war-loading');
+
+    fetch(WARLinkManager.ajax_url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+            action: 'war_generate_qrcode',
+            nonce: WARLinkManager.qrcode_nonce,
+            link_id: linkId
+        })
+    })
+    .then(r => r.json())
+    .then(res => {
+        if (btn) btn.classList.remove('war-loading');
+        if (!res.success) {
+            alert(res.data?.message || 'Erro ao gerar QR Code');
+            return;
+        }
+        // Trigger download
+        var a = document.createElement('a');
+        a.href = res.data.image;
+        a.download = res.data.filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    })
+    .catch(() => {
+        if (btn) btn.classList.remove('war-loading');
+        alert('Erro de conexão');
+    });
+}
+
+================================================================================
+FUNCIONALIDADE 2: KEYWORDS NOS LINKS (CHAT IG - MODO LOCAL)
+================================================================================
+
+OBJETIVO:
+Permitir associar palavras-chave (keywords) aos links, de forma que o Chat IG
+possa responder automaticamente SEM precisar de um webhook externo.
+Isso torna a aplicação mais rápida e autossuficiente, mantendo a porta aberta
+para integração futura com agentes de IA via webhook.
+
+--------------------------------------------------------------------------------
+ESPECIFICAÇÕES TÉCNICAS
+--------------------------------------------------------------------------------
+
+NOVO META FIELD:
+  Meta Key: war_keywords
+  Tipo: textarea (múltiplas keywords separadas por vírgula ou quebra de linha)
+  Exemplo: "pdf, ebook, baixar, download"
+
+LÓGICA DE MATCHING:
+  - Case-insensitive (PDF = pdf = Pdf)
+  - Trim de espaços
+  - Match exato da palavra (não substring)
+  - Se encontrar match, retorna o link associado
+
+PRIORIDADE DE RESPOSTA NO CHAT IG:
+  1. PRIMEIRO: Busca keyword nos links locais (war_link posts)
+  2. SE NÃO ENCONTRAR + WEBHOOK CONFIGURADO: Chama webhook externo
+  3. SE NÃO ENCONTRAR + SEM WEBHOOK: Retorna mensagem de erro
+
+--------------------------------------------------------------------------------
+FLUXO DO USUÁRIO (ADMIN)
+--------------------------------------------------------------------------------
+
+1. Admin cria/edita um link no wp-admin ou via shortcode
+2. Preenche o campo "Keywords" com palavras separadas por vírgula
+   Exemplo: "pdf, ebook, material, baixar"
+3. Salva o link
+4. Quando visitante digita uma dessas palavras no Chat IG, o card do link é exibido
+
+--------------------------------------------------------------------------------
+FLUXO DO USUÁRIO (VISITANTE NO CHAT IG)
+--------------------------------------------------------------------------------
+
+1. Visitante acessa página com [war_ig_chat]
+2. Digita uma palavra-chave (ex: "PDF")
+3. Sistema busca nos links cadastrados por essa keyword
+4. SE ENCONTRAR:
+   - Retorna card com headline, subtitle e botão para o link
+5. SE NÃO ENCONTRAR + WEBHOOK:
+   - Faz chamada para webhook configurado
+6. SE NÃO ENCONTRAR + SEM WEBHOOK:
+   - Exibe mensagem de erro configurada
+
+--------------------------------------------------------------------------------
+ARQUIVOS A MODIFICAR/CRIAR
+--------------------------------------------------------------------------------
+
+1. inc/meta-redirect-url.php
+   - Adicionar metabox "Keywords" abaixo do campo de URL de redirecionamento
+   - Sanitização: sanitize_textarea_field + trim + lowercase
+
+2. inc/frontend/class-ig-chat-ajax.php
+   - Modificar handle_send() para:
+     a) Primeiro buscar keyword localmente
+     b) Se não encontrar, chamar webhook (se configurado)
+   - Nova função: find_link_by_keyword($keyword)
+
+3. inc/core/class-link-query.php (NOVO - opcional)
+   - Classe para queries otimizadas de links por keyword
+   - Cache transient para performance
+
+4. templates/link-manager.php
+   - Adicionar campo de keywords no formulário de criação/edição
+
+5. assets/js/manager.js
+   - Handler para salvar keywords via AJAX
+
+6. inc/admin/class-settings.php
+   - Nova opção: "Priorizar keywords locais" (checkbox, default: true)
+   - Nova opção: "Fallback para webhook" (checkbox, default: true)
+
+--------------------------------------------------------------------------------
+ESTRUTURA DO META FIELD
+--------------------------------------------------------------------------------
+
+// Salvando
+update_post_meta($post_id, 'war_keywords', sanitize_textarea_field($keywords));
+
+// Buscando link por keyword
+function war_find_link_by_keyword($keyword) {
+    $keyword = strtolower(trim($keyword));
+    if ($keyword === '') return null;
+
+    $args = [
+        'post_type' => 'war_link',
+        'post_status' => 'publish',
+        'posts_per_page' => 1,
+        'meta_query' => [
+            [
+                'key' => 'war_keywords',
+                'value' => $keyword,
+                'compare' => 'LIKE',
+            ],
+        ],
+    ];
+
+    $query = new WP_Query($args);
+    if (!$query->have_posts()) return null;
+
+    $post = $query->posts[0];
+    $redirect_url = get_post_meta($post->ID, 'war_redirect_url', true);
+
+    // Retorna no formato esperado pelo Chat IG
+    return [
+        'headline' => '✅ Link liberado',
+        'subtitle' => $post->post_title,
+        'button_text' => 'Toque aqui p/ acessar',
+        'button_url' => get_permalink($post->ID),
+        'status_badge' => '',
+        'type' => 'card',
+    ];
+}
+
+--------------------------------------------------------------------------------
+CÓDIGO SUGERIDO - MODIFICAÇÃO NO AJAX DO CHAT IG
+--------------------------------------------------------------------------------
+
+public static function handle_send() {
+    check_ajax_referer(self::NONCE_ACTION, 'nonce');
+
+    $keyword = isset($_POST['keyword']) ? sanitize_text_field(wp_unslash($_POST['keyword'])) : '';
+    // ... outros campos ...
+
+    if ($keyword === '') {
+        wp_send_json_error(['message' => 'Keyword vazia.'], 400);
+    }
+
+    $settings = self::settings();
+    $rate_limit_ms = (int) ($settings['rate_limit_ms'] ?? 2500);
+    self::guard_rate_limit($session_id, $rate_limit_ms);
+
+    // ========================================
+    // NOVO: Busca local por keyword primeiro
+    // ========================================
+    $local_result = war_find_link_by_keyword($keyword);
+    if ($local_result) {
+        wp_send_json_success($local_result);
+        return; // Encerra aqui, sem chamar webhook
+    }
+
+    // ========================================
+    // FALLBACK: Chama webhook se configurado
+    // ========================================
+    $webhook_url = (string) ($settings['webhook_url'] ?? '');
+    if ($webhook_url === '') {
+        wp_send_json_error(['message' => 'Nenhum link encontrado para essa palavra-chave.'], 404);
+    }
+
+    // ... resto do código existente para chamar webhook ...
+}
+
+--------------------------------------------------------------------------------
+METABOX NO WP-ADMIN
+--------------------------------------------------------------------------------
+
+// Em inc/meta-redirect-url.php ou arquivo separado
+
+add_action('add_meta_boxes', function() {
+    add_meta_box(
+        'war_keywords_metabox',
+        __('Keywords (Chat IG)', WAR_TEXT_DOMAIN),
+        'war_render_keywords_metabox',
+        'war_link',
+        'normal',
+        'default'
+    );
+});
+
+function war_render_keywords_metabox($post) {
+    $keywords = get_post_meta($post->ID, 'war_keywords', true);
+    wp_nonce_field('war_keywords_save', 'war_keywords_nonce');
+    ?>
+    <p>
+        <label for="war_keywords">
+            <?php _e('Palavras-chave que acionam este link no Chat IG:', WAR_TEXT_DOMAIN); ?>
+        </label>
+    </p>
+    <textarea 
+        id="war_keywords" 
+        name="war_keywords" 
+        rows="3" 
+        class="large-text"
+        placeholder="pdf, ebook, baixar, download"
+    ><?php echo esc_textarea($keywords); ?></textarea>
+    <p class="description">
+        <?php _e('Separe as palavras por vírgula. Não diferencia maiúsculas/minúsculas.', WAR_TEXT_DOMAIN); ?>
+    </p>
+    <?php
+}
+
+add_action('save_post_war_link', function($post_id) {
+    if (!isset($_POST['war_keywords_nonce'])) return;
+    if (!wp_verify_nonce($_POST['war_keywords_nonce'], 'war_keywords_save')) return;
+    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
+    if (!current_user_can('edit_post', $post_id)) return;
+
+    $keywords = isset($_POST['war_keywords']) ? sanitize_textarea_field($_POST['war_keywords']) : '';
+    update_post_meta($post_id, 'war_keywords', $keywords);
+});
+
+================================================================================
+RESUMO DE ARQUIVOS
+================================================================================
+
+NOVOS ARQUIVOS:
+  - inc/admin/class-qrcode-ajax.php
+  - docs/PRD-v0.4.0-qrcode-keywords.txt (este arquivo)
+
+ARQUIVOS MODIFICADOS:
+  - wp-affiliate-redirector.php (require dos novos arquivos, incrementar versão)
+  - inc/meta-redirect-url.php (adicionar metabox de keywords)
+  - inc/frontend/class-ig-chat-ajax.php (lógica de busca local)
+  - inc/frontend/class-link-manager.php (enqueue do nonce de QR Code)
+  - assets/js/manager.js (handler de QR Code + campo keywords)
+  - assets/css/manager.css (estilos do botão QR Code)
+  - templates/link-manager.php (botão QR Code + campo keywords)
+
+ASSETS ADICIONADOS:
+  - assets/icons/qr-code.png (ícone do botão)
+
+================================================================================
+CHECKLIST DE IMPLEMENTAÇÃO
+================================================================================
+
+FUNCIONALIDADE 1 - QR CODE:
+[ ] Criar inc/admin/class-qrcode-ajax.php
+[ ] Registrar endpoint AJAX war_generate_qrcode
+[ ] Adicionar require no wp-affiliate-redirector.php
+[ ] Adicionar botão de QR Code no template de cards
+[ ] Implementar handler JS para download
+[ ] Estilizar botão/ícone
+[ ] Testar geração e download
+[ ] Testar permissões (somente admin)
+
+FUNCIONALIDADE 2 - KEYWORDS:
+[ ] Adicionar metabox "Keywords" no wp-admin
+[ ] Salvar meta war_keywords no save_post
+[ ] Criar função war_find_link_by_keyword()
+[ ] Modificar handle_send() no class-ig-chat-ajax.php
+[ ] Adicionar campo keywords no shortcode manager
+[ ] Testar busca local por keyword
+[ ] Testar fallback para webhook
+[ ] Testar case-insensitive matching
+
+GERAL:
+[ ] Incrementar versão para 0.4.0
+[ ] Atualizar CHANGELOG.md
+[ ] Testar em ambiente de desenvolvimento
+[ ] Testar em ambiente de produção
+
+================================================================================
+CONSIDERAÇÕES FUTURAS
+================================================================================
+
+1. CACHE DE KEYWORDS:
+   - Implementar transient cache para queries de keywords
+   - Invalidar cache quando link é salvo/deletado
+
+2. MÚLTIPLOS MATCHES:
+   - Se várias keywords baterem, qual link retornar?
+   - Sugestão: retornar o mais recente ou permitir prioridade
+
+3. ANALYTICS:
+   - Contar quantas vezes cada keyword foi buscada
+   - Dashboard de keywords mais populares
+
+4. INTEGRAÇÃO COM IA:
+   - Webhook configurado pode ser um agente de IA
+   - Manter histórico de conversa no session storage
+   - Enviar contexto da conversa para o webhook
+
+================================================================================
+FIM DO DOCUMENTO
+================================================================================

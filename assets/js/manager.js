@@ -124,6 +124,37 @@
     });
   }
 
+  function parseKeywords(raw) {
+    var s = String(raw || '').trim();
+    if (!s) return [];
+    return s.split(',')
+      .map(function (x) { return String(x || '').trim(); })
+      .filter(function (x) { return !!x; });
+  }
+
+  function renderKeywordsChips(rawKeywords) {
+    var kws = parseKeywords(rawKeywords);
+    if (!kws.length) return '';
+    var chips = kws.map(function (k) {
+      return '<span class="war-chip" title="' + escapeHtml(k) + '">' + escapeHtml(k) + '</span>';
+    }).join('');
+    return '<div class="war-item__keywords" aria-label="Keywords">' +
+      '<span class="war-item__keywords-label">Keywords:</span>' +
+      '<span class="war-item__keywords-chips">' + chips + '</span>' +
+    '</div>';
+  }
+
+  function flashSavedRow(root, id) {
+    if (!id) return;
+    var $row = root.find('[data-id="' + String(id) + '"]');
+    if (!$row.length) return;
+    $row.removeClass('war-item--saved'); // reset in case of quick successive saves
+    // force reflow to restart animation
+    void $row[0].offsetHeight;
+    $row.addClass('war-item--saved');
+    window.setTimeout(function () { $row.removeClass('war-item--saved'); }, 1200);
+  }
+
   function formatPublicUrlDisplay(publicUrl) {
     var u = String(publicUrl || '').trim();
     if (!u) return '';
@@ -151,6 +182,13 @@
       return;
     }
 
+    // Diagnóstico: quantos itens têm keywords
+    try {
+      var withKw = 0;
+      items.forEach(function (it) { if (String(it.keywords || '').trim()) withKw++; });
+      debugAppend({ ts: Date.now(), type: 'render_rows', items: items.length, items_with_keywords: withKw });
+    } catch (e) {}
+
     var html = '';
     items.forEach(function (it) {
       var publicUrl = it.public_url || '';
@@ -170,6 +208,7 @@
               '<img class="war-copy-icon" src="' + escapeHtml(copyIconUrl) + '" alt="Copiar" />' +
             '</button>' +
           '</div>' +
+          renderKeywordsChips(it.keywords || '') +
           '<div class="war-item__actions">' +
             (qrcodeIconUrl ? '<button type="button" class="war-action-icon" aria-label="Gerar QR Code" data-war-qrcode="' + escapeHtml(it.id) + '">' +
               '<img class="war-action-icon__img" src="' + escapeHtml(qrcodeIconUrl) + '" alt="QR Code" />' +
@@ -224,6 +263,11 @@
           return;
         }
         renderRows(root, res.data.items || []);
+        var lastSavedId = root.data('warLastSavedId') || 0;
+        if (lastSavedId) {
+          flashSavedRow(root, lastSavedId);
+          root.data('warLastSavedId', 0);
+        }
         renderPagination(root, res.data.page || 1, res.data.total_pages || 1);
         setStatus(root, '');
         root.data('warPage', res.data.page || 1);
@@ -271,6 +315,13 @@
 
   function bind(root) {
     ensureDebugUI();
+    debugAppend({
+      ts: Date.now(),
+      type: 'build_info',
+      plugin_version: cfg.build_version || null,
+      js_ver: cfg.build_js_ver || null,
+      css_ver: cfg.build_css_ver || null
+    });
     debugAppend({ ts: Date.now(), type: 'manager_init', ajaxUrl: !!ajaxUrl, nonce: !!nonce, go_base: goBase });
 
     var slugTouched = false;
@@ -458,6 +509,16 @@
           if (!res || !res.success) {
             setStatus(root, (res && res.data && res.data.message) ? res.data.message : getStr('status_save_err', 'Erro ao salvar.'));
             return;
+          }
+          var savedId = 0;
+          if (res && res.data && res.data.id) {
+            savedId = parseInt(res.data.id, 10) || 0;
+          }
+          if (!savedId) {
+            savedId = id || 0;
+          }
+          if (savedId) {
+            root.data('warLastSavedId', savedId);
           }
           resetForm(root);
           loadList(root, 1);

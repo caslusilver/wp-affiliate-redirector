@@ -23,6 +23,7 @@ class WAR_IG_Chat_Ajax {
 			return WAR_Admin_Integrations::get_settings();
 		}
 		return [
+			'webhook_enabled' => false,
 			'webhook_url' => '',
 			'secret' => '',
 			'rate_limit_ms' => 2500,
@@ -89,6 +90,7 @@ class WAR_IG_Chat_Ajax {
 		}
 
 		$settings = self::settings();
+		$is_debug = class_exists('WAR_Config') ? (bool) WAR_Config::is_debug() : false;
 		$rate_limit_ms = (int) ($settings['rate_limit_ms'] ?? 2500);
 		self::guard_rate_limit($session_id, $rate_limit_ms);
 
@@ -99,7 +101,14 @@ class WAR_IG_Chat_Ajax {
 		$local_result = war_find_link_by_keyword($keyword);
 		if ($local_result) {
 			WAR_Debug::log('IG Chat: Link encontrado localmente', ['result' => $local_result]);
-			wp_send_json_success($local_result);
+			$out = $local_result;
+			if ($is_debug) {
+				$out['debug'] = [
+					'source' => 'local',
+					'keyword' => $keyword,
+				];
+			}
+			wp_send_json_success($out);
 			return; // Encerra aqui, sem chamar webhook
 		}
 
@@ -108,10 +117,22 @@ class WAR_IG_Chat_Ajax {
 		// ========================================
 		// FALLBACK: Chama webhook se configurado
 		// ========================================
+		$webhook_enabled = !empty($settings['webhook_enabled']);
 		$webhook_url = (string) ($settings['webhook_url'] ?? '');
-		if ($webhook_url === '') {
-			WAR_Debug::log('IG Chat: Webhook não configurado');
-			wp_send_json_error(['message' => 'Nenhum link encontrado para essa palavra-chave.'], 404);
+		if (!$webhook_enabled || $webhook_url === '') {
+			WAR_Debug::log('IG Chat: Webhook desabilitado/não configurado', [
+				'webhook_enabled' => $webhook_enabled,
+				'has_url' => $webhook_url !== '',
+			]);
+			wp_send_json_error([
+				'message' => 'Nenhum link encontrado para essa palavra-chave.',
+				'debug' => $is_debug ? [
+					'source' => 'none',
+					'keyword' => $keyword,
+					'webhook_enabled' => $webhook_enabled,
+					'has_webhook_url' => $webhook_url !== '',
+				] : null,
+			], 404);
 		}
 
 		$payload = [
@@ -165,6 +186,13 @@ class WAR_IG_Chat_Ajax {
 		}
 
 		WAR_Debug::log('IG Chat: Sucesso via webhook', ['normalized' => $normalized]);
+		if ($is_debug) {
+			$normalized['debug'] = [
+				'source' => 'webhook',
+				'keyword' => $keyword,
+				'status_code' => $code,
+			];
+		}
 		wp_send_json_success($normalized);
 	}
 }

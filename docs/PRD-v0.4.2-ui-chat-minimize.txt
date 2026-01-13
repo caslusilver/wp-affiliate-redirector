@@ -1,0 +1,176 @@
+================================================================================
+PRD - WP AFFILIATE REDIRECTOR v0.4.2
+================================================================================
+Data: 13/01/2026
+Versão Atual: 0.4.1
+Nova Versão: 0.4.2
+
+================================================================================
+CONTEXTO / PROBLEMA
+================================================================================
+Foram solicitadas melhorias de UI/UX no painel de links e no Chat IG. Houve
+relato de “não refletiu no site” mesmo após atualização.
+
+No diagnóstico via console, o endpoint `war_links_list` retorna corretamente o
+campo `keywords`, e o HTML do card contém `data-war-keywords`. Porém, o DOM não
+contém elementos `.war-item__keywords`, indicando que o JS entregue ao browser
+não está na versão esperada (cache/minificação/CDN/HTML cache).
+
+Este PRD inclui, além das features, uma camada mínima de “observabilidade” e
+cache-busting para garantir que a versão correta do JS/CSS esteja ativa e para
+validar eventos rapidamente.
+
+================================================================================
+OBJETIVOS
+================================================================================
+1) Painel [war_link_manager]:
+   - Exibir keywords diretamente no card da lista (sem precisar entrar em editar).
+   - Animação/feedback visual ao salvar (criar/editar) para confirmar sucesso.
+
+2) Chat [war_ig_chat]:
+   - Header fixo (foto/nome/status) mantendo proporção atual em mobile/desktop.
+   - Footer fixo (input de keyword), com leve drop-shadow no footer (não no header).
+   - Conteúdo (mensagens) rola “no segundo plano” entre header e footer.
+   - Ao clicar no botão voltar (←), minimizar chat em bolha flutuante (canto inferior direito).
+   - Reabrir o chat ao clicar na bolha.
+
+3) Admin (Affiliate Links → Integrações):
+   - Toggle “Habilitar webhook (fallback)” para permitir/desabilitar chamadas ao webhook.
+     Default: DESABILITADO.
+   - Toggle “Minimizar chat em bolha flutuante” para permitir/desabilitar a feature.
+     Default: DESABILITADO.
+
+4) Garantir que mudanças “refletirão no site”:
+   - Cache-busting confiável para CSS/JS.
+   - Indicadores de build/version em runtime para validação rápida no console/debug.
+
+================================================================================
+NÃO-OBJETIVOS (nesta versão)
+================================================================================
+- Persistir histórico do chat em banco (CPT/tabela). Nesta versão, continua em sessionStorage.
+- Implementar agente de IA / rotas específicas de IA.
+- UI avançada de gerenciamento de keywords (autocomplete, validação complexa).
+
+================================================================================
+REQUISITOS FUNCIONAIS
+================================================================================
+
+RF1 - Exibição de keywords na lista
+- Na lista de cards do painel, mostrar:
+  - Label “Keywords:” + chips (pílulas) com as keywords separadas por vírgula.
+- Se não houver keywords, não renderizar a linha.
+
+RF2 - Feedback visual de “salvo”
+- Após criar/editar com sucesso:
+  - destacar o card correspondente (ex.: highlight/anim) por ~1s.
+  - não afetar os demais cards.
+
+RF3 - Chat header/footer fixos
+- Header deve permanecer visível enquanto as mensagens rolam.
+- Footer (input) deve permanecer visível enquanto as mensagens rolam.
+- Footer deve ter drop-shadow leve para separar do conteúdo.
+- Header NÃO deve ter drop-shadow.
+
+RF4 - Minimizar para bolha flutuante
+- Ao clicar em ←:
+  - se a opção admin “minimizar em bolha” estiver ativa:
+    - ocultar o painel do chat e exibir uma bolha flutuante no canto inferior direito.
+  - se estiver desativa:
+    - comportamento atual (não minimiza / botão pode ficar desabilitado).
+- Ao clicar na bolha:
+  - reabrir o chat e focar no input.
+
+RF5 - Toggle de webhook (fallback)
+- Ao não encontrar match local por keyword:
+  - se webhook_enabled estiver DESLIGADO → retornar mensagem “Nenhum link encontrado...”
+  - se webhook_enabled estiver LIGADO e webhook_url preenchido → chamar webhook.
+
+================================================================================
+REQUISITOS TÉCNICOS
+================================================================================
+
+RT1 - Cache-busting confiável
+- Enqueue de scripts/estilos deve usar versão baseada em `filemtime()` (ou hash curto)
+  além da versão do plugin, para evitar:
+  - cache agressivo de CDN
+  - cache de plugins de minificação que ignora querystring de versão
+
+RT2 - Observabilidade / validação de build
+- Incluir no `wp_localize_script`:
+  - `build_version` (versão do plugin)
+  - `build_asset_ts` (filemtime do JS/CSS)
+- No init do JS (manager/chat), logar um evento:
+  - `type: "build_info"` com esses campos
+- Opcional: no painel do debug (link manager), mostrar build_info.
+
+RT3 - Compatibilidade
+- Não quebrar shortcode existente.
+- Manter a proporção atual do layout do chat (mobile/desktop).
+- A bolha deve ser acessível (aria-label) e não bloquear o uso do site indevidamente.
+
+================================================================================
+CRITÉRIOS DE ACEITAÇÃO
+================================================================================
+
+CA1 - Keywords na lista
+- Dado um link com keywords “futuro, pdf”
+  - então o card deve exibir chips “futuro” e “pdf” na lista.
+
+CA2 - Feedback de salvo
+- Ao editar o link ID X e salvar com sucesso
+  - o card ID X deve destacar por ~1s.
+
+CA3 - Chat fixo
+- Rolando mensagens no chat, header e footer permanecem fixos no painel.
+- Footer tem sombra leve; header não tem sombra.
+
+CA4 - Minimizar
+- Com a opção ligada, o botão ← minimiza e mostra bolha.
+- Ao clicar na bolha, o chat reabre e o input recebe foco.
+- Com a opção desligada, o botão ← não minimiza.
+
+CA5 - Webhook toggle
+- Com webhook desabilitado e sem match local, não chama webhook.
+- Com webhook habilitado + URL, chama webhook.
+
+CA6 - Verificação de build
+- No console/log do debug deve existir um evento indicando build_version e asset_ts.
+- Network deve mostrar assets com versionamento atualizado conforme build.
+
+================================================================================
+ARQUIVOS IMPACTADOS (previstos)
+================================================================================
+- inc/frontend/class-link-manager.php (enqueue/versions/localize build info)
+- assets/js/manager.js (render keywords + highlight + build log)
+- assets/css/manager.css (chips + animação + ajuste compat)
+
+- inc/admin/class-integrations.php (novos toggles)
+- inc/frontend/class-ig-chat.php (localize: minimize_enabled + build info)
+- inc/frontend/class-ig-chat-ajax.php (respeitar webhook_enabled)
+- assets/ig-chat/ig-chat.js (minimize + build log)
+- assets/ig-chat/ig-chat.css (sticky header/footer + shadow footer + bolha)
+
+- CHANGELOG.md ([Unreleased] conforme template)
+
+================================================================================
+PLANO DE TESTE (manual)
+================================================================================
+1) Link manager:
+   - Abrir página com [war_link_manager]
+   - Verificar no Network que `manager.js` e `manager.css` foram carregados com versão atualizada.
+   - Confirmar no console/debug `build_info`.
+   - Ver keywords em chips e highlight ao salvar.
+
+2) Chat:
+   - Abrir página com [war_ig_chat]
+   - Verificar no Network `ig-chat.js/css` versão atualizada.
+   - Confirmar sticky header/footer e sombra no footer.
+   - Ligar opção minimizar no admin, testar bolha.
+
+3) Webhook:
+   - Desligado: sem match local → não chama webhook.
+   - Ligado + URL: sem match local → chama webhook.
+
+================================================================================
+FIM DO DOCUMENTO
+================================================================================

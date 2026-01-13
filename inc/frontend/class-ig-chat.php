@@ -22,6 +22,7 @@ class WAR_IG_Chat_Shortcode {
 		}
 
 		return [
+			'webhook_enabled' => false,
 			'webhook_url' => '',
 			'header_name' => 'Chat',
 			'header_status' => 'Online agora',
@@ -30,24 +31,30 @@ class WAR_IG_Chat_Shortcode {
 			'initial_message' => '',
 			'error_message' => 'Tenta de novo.',
 			'rate_limit_ms' => 2500,
+			'chat_minimize_enabled' => false,
 		];
 	}
 
 	private static function enqueue_assets(array $settings, array $context) {
-		$version = function_exists('WP_AFFILIATE_REDIRECTOR_get_version') ? WP_AFFILIATE_REDIRECTOR_get_version() : '0.0.0';
+		$plugin_version = function_exists('WP_AFFILIATE_REDIRECTOR_get_version') ? WP_AFFILIATE_REDIRECTOR_get_version() : '0.0.0';
+		$css_file = WAR_PLUGIN_DIR . 'assets/ig-chat/ig-chat.css';
+		$js_file = WAR_PLUGIN_DIR . 'assets/ig-chat/ig-chat.js';
+		$css_ver = file_exists($css_file) ? (string) filemtime($css_file) : $plugin_version;
+		$js_ver = file_exists($js_file) ? (string) filemtime($js_file) : $plugin_version;
+		$is_debug = class_exists('WAR_Config') ? (bool) WAR_Config::is_debug() : false;
 
 		wp_enqueue_style(
 			'war-ig-chat',
 			WAR_PLUGIN_URL . 'assets/ig-chat/ig-chat.css',
 			[],
-			$version
+			$css_ver
 		);
 
 		wp_enqueue_script(
 			'war-ig-chat',
 			WAR_PLUGIN_URL . 'assets/ig-chat/ig-chat.js',
 			[],
-			$version,
+			$js_ver,
 			true
 		);
 
@@ -59,6 +66,11 @@ class WAR_IG_Chat_Shortcode {
 			'error_message' => (string) ($settings['error_message'] ?? 'Tenta de novo.'),
 			'send_icon_url' => esc_url_raw((string) ($settings['send_icon_url'] ?? '')),
 			'rate_limit_ms' => (int) ($settings['rate_limit_ms'] ?? 2500),
+			'minimize_enabled' => !empty($settings['chat_minimize_enabled']),
+			'debug' => $is_debug,
+			'build_version' => (string) $plugin_version,
+			'build_js_ver' => (string) $js_ver,
+			'build_css_ver' => (string) $css_ver,
 		]);
 	}
 

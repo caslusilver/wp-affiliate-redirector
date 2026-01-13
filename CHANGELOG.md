@@ -2,6 +2,35 @@
 
 ## [Unreleased]
 
+### Changed
+- **Versão atual**: v0.4.4  
+  **Versão sugerida após a mudança**: vX.Y.Z  
+  **Descrição**: texto objetivo do que mudou e impacto (pode listar itens separados por ponto e vírgula).
+
+## 0.4.4 - 2026-01-13
+
+#### Protocol: e441d1a
+
+### Breaking
+- N/A
+
+### Removed
+- N/A
+
+### Added
+- N/A
+
+### Changed
+- Publica no GitHub (develop) as mudanças de assets/inc para que Git Updater reflita corretamente
+- Cache-busting por `filemtime()` nos assets do painel/chat
+- Logs de build/debug (front + AJAX) para validar QR Code e Keywords em ambiente com cache/CDN
+
+### UI (Cards)
+- N/A
+
+### Fixed
+- N/A
+
 ## 0.4.3 - 2026-01-12
 
 ### Breaking

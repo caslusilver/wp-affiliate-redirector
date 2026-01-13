@@ -9,6 +9,8 @@
   var errorMessage = cfg.error_message || 'Tenta de novo.';
   var sendIconUrl = cfg.send_icon_url || '';
   var rateLimitMs = typeof cfg.rate_limit_ms === 'number' ? cfg.rate_limit_ms : 2500;
+  var minimizeEnabled = !!cfg.minimize_enabled;
+  var isDebug = !!cfg.debug;
 
   var isSending = false;
 
@@ -16,6 +18,75 @@
   function qsa(sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); }
 
   function nowMs() { return Date.now(); }
+
+  function ensureDebugUI() {
+    if (!isDebug) return null;
+    var existing = qs('[data-war-ig-debug="1"]');
+    if (existing) return existing;
+
+    var wrap = document.createElement('div');
+    wrap.setAttribute('data-war-ig-debug', '1');
+    wrap.style.position = 'fixed';
+    wrap.style.left = '12px';
+    wrap.style.bottom = '12px';
+    wrap.style.zIndex = '999999';
+    wrap.style.maxWidth = '560px';
+    wrap.style.width = 'min(560px, calc(100vw - 24px))';
+
+    wrap.innerHTML =
+      '<div style="background:#111;color:#fff;border-radius:10px;padding:10px;border:1px solid rgba(255,255,255,0.12);box-shadow:0 10px 30px rgba(0,0,0,0.35);">' +
+        '<div style="display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:8px;">' +
+          '<div style="font-weight:800;">WAR Chat Debug</div>' +
+          '<div style="display:flex;gap:8px;align-items:center;">' +
+            '<button type="button" data-war-ig-debug-copy="1" style="border:0;border-radius:999px;padding:6px 10px;font-weight:700;cursor:pointer;">Copiar</button>' +
+            '<button type="button" data-war-ig-debug-clear="1" style="border:0;border-radius:999px;padding:6px 10px;font-weight:700;cursor:pointer;">Limpar</button>' +
+            '<button type="button" data-war-ig-debug-min="1" style="border:0;border-radius:999px;padding:6px 10px;font-weight:700;cursor:pointer;">Min</button>' +
+          '</div>' +
+        '</div>' +
+        '<textarea data-war-ig-debug-ta="1" style="width:100%;height:220px;background:#0b0b0b;color:#d1d5db;border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:10px;box-sizing:border-box;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,\\\"Liberation Mono\\\",\\\"Courier New\\\",monospace;font-size:12px;line-height:1.35;resize:vertical;"></textarea>' +
+      '</div>';
+
+    document.body.appendChild(wrap);
+
+    var minimized = false;
+    var ta = qs('[data-war-ig-debug-ta="1"]', wrap);
+    wrap.addEventListener('click', function (e) {
+      var t = e.target;
+      if (!t || !t.getAttribute) return;
+      if (t.getAttribute('data-war-ig-debug-min') === '1') {
+        minimized = !minimized;
+        if (ta) ta.style.display = minimized ? 'none' : 'block';
+      }
+      if (t.getAttribute('data-war-ig-debug-clear') === '1') {
+        if (ta) ta.value = '';
+      }
+      if (t.getAttribute('data-war-ig-debug-copy') === '1') {
+        var text = (ta && ta.value) ? ta.value : '';
+        if (!text) return;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text);
+        } else if (ta) {
+          ta.select();
+          try { document.execCommand('copy'); } catch (err) {}
+        }
+      }
+    });
+
+    return wrap;
+  }
+
+  function debugAppend(obj) {
+    if (!isDebug) return;
+    var wrap = ensureDebugUI();
+    if (!wrap) return;
+    var ta = qs('[data-war-ig-debug-ta="1"]', wrap);
+    if (!ta) return;
+    var current = ta.value || '';
+    var line = '';
+    try { line = JSON.stringify(obj); } catch (e) { line = String(obj); }
+    ta.value = (current ? current + "\n" : '') + line;
+    ta.scrollTop = ta.scrollHeight;
+  }
 
   function storageKey() {
     return 'war_ig_chat:' + (pageSlug || location.pathname || 'default');
@@ -135,11 +206,53 @@
   }
 
   function postAjax(data) {
+    debugAppend({ ts: nowMs(), type: 'ajax_request', payload: data });
     return fetch(ajaxUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
       body: new URLSearchParams(data).toString()
-    }).then(function (r) { return r.json(); });
+    }).then(function (r) { return r.json(); }).then(function (json) {
+      debugAppend({ ts: nowMs(), type: 'ajax_response', response: json });
+      return json;
+    });
+  }
+
+  function ensureBubble($root) {
+    if (!$root) return null;
+    var existing = qs('[data-war-ig-bubble="1"]');
+    if (existing) return existing;
+
+    var btn = el('button', 'war-ig-bubble');
+    btn.type = 'button';
+    btn.setAttribute('data-war-ig-bubble', '1');
+    btn.setAttribute('aria-label', 'Abrir chat');
+
+    // Prefer avatar do header.
+    var $avatarImg = qs('.war-ig-avatar img', $root);
+    if ($avatarImg && $avatarImg.getAttribute('src')) {
+      var img = document.createElement('img');
+      img.src = $avatarImg.getAttribute('src');
+      img.alt = 'Chat';
+      btn.appendChild(img);
+    } else {
+      var nameEl = qs('.war-ig-name', $root);
+      var initial = (nameEl && nameEl.textContent) ? String(nameEl.textContent).trim().slice(0, 1).toUpperCase() : 'C';
+      var fb = el('div', 'war-ig-bubble__fallback');
+      fb.textContent = initial;
+      btn.appendChild(fb);
+    }
+
+    document.body.appendChild(btn);
+    return btn;
+  }
+
+  function setMinimized($root, minimized) {
+    if (!$root) return;
+    if (minimized) {
+      $root.classList.add('war-ig-chat--minimized');
+    } else {
+      $root.classList.remove('war-ig-chat--minimized');
+    }
   }
 
   function init() {
@@ -147,12 +260,44 @@
     if (!$root) return;
     if (!ajaxUrl || !nonce) return;
 
+    debugAppend({
+      ts: nowMs(),
+      type: 'build_info',
+      plugin_version: cfg.build_version || null,
+      js_ver: cfg.build_js_ver || null,
+      css_ver: cfg.build_css_ver || null
+    });
+    debugAppend({ ts: nowMs(), type: 'chat_init', ajaxUrl: !!ajaxUrl, nonce: !!nonce, minimizeEnabled: !!minimizeEnabled });
+
     var $messages = qs('[data-war-ig-messages="1"]', $root);
     var $input = qs('[data-war-ig-input="1"]', $root);
     var $send = qs('[data-war-ig-send="1"]', $root);
+    var $back = qs('.war-ig-back', $root);
 
     if (sendIconUrl) {
       $send.innerHTML = '<img src="' + sendIconUrl + '" alt="Enviar" />';
+    }
+
+    // Minimize UX (opcional, via admin)
+    if (minimizeEnabled && $back) {
+      $back.disabled = false;
+      $back.style.cursor = 'pointer';
+      $back.setAttribute('aria-label', 'Minimizar');
+
+      var $bubble = ensureBubble($root);
+      if ($bubble) {
+        $bubble.addEventListener('click', function () {
+          setMinimized($root, false);
+          // foco no input ao reabrir
+          setTimeout(function () { if ($input) $input.focus(); }, 60);
+          debugAppend({ ts: nowMs(), type: 'minimize_restore' });
+        });
+      }
+
+      $back.addEventListener('click', function () {
+        setMinimized($root, true);
+        debugAppend({ ts: nowMs(), type: 'minimize_to_bubble' });
+      });
     }
 
     // Load history

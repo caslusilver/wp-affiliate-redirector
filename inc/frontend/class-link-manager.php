@@ -53,21 +53,26 @@ class WAR_Front_Link_Manager {
 			return;
 		}
 
-		$version = function_exists('WP_AFFILIATE_REDIRECTOR_get_version') ? WP_AFFILIATE_REDIRECTOR_get_version() : '0.0.0';
+		$plugin_version = function_exists('WP_AFFILIATE_REDIRECTOR_get_version') ? WP_AFFILIATE_REDIRECTOR_get_version() : '0.0.0';
+		$css_file = WAR_PLUGIN_DIR . 'assets/css/manager.css';
+		$js_file = WAR_PLUGIN_DIR . 'assets/js/manager.js';
+		// Cache-busting forte: usa filemtime quando possível.
+		$css_ver = file_exists($css_file) ? (string) filemtime($css_file) : $plugin_version;
+		$js_ver = file_exists($js_file) ? (string) filemtime($js_file) : $plugin_version;
 
 		wp_enqueue_style('dashicons');
 		wp_enqueue_style(
 			'war-link-manager',
 			WAR_PLUGIN_URL . 'assets/css/manager.css',
 			['dashicons'],
-			$version
+			$css_ver
 		);
 
 		wp_enqueue_script(
 			'war-link-manager',
 			WAR_PLUGIN_URL . 'assets/js/manager.js',
 			['jquery'],
-			$version,
+			$js_ver,
 			true
 		);
 
@@ -85,6 +90,9 @@ class WAR_Front_Link_Manager {
 			'qrcode_nonce' => wp_create_nonce('war_qrcode_nonce'),
 			'per_page' => 20,
 			'debug' => $is_debug,
+			'build_version' => (string) $plugin_version,
+			'build_js_ver' => (string) $js_ver,
+			'build_css_ver' => (string) $css_ver,
 			'go_base' => esc_url_raw(home_url('/go/')),
 			// Só define URLs locais se os assets existirem (senão, o JS usa fallbacks externos).
 			'copy_icon_url' => file_exists(WAR_PLUGIN_DIR . $icon_copy) ? esc_url_raw(WAR_PLUGIN_URL . $icon_copy) : '',
