@@ -3,9 +3,25 @@
 ## [Unreleased]
 
 ### Changed
-- **Versão atual**: v0.4.5  
+- **Versão atual**: v0.4.6  
   **Versão sugerida após a mudança**: vX.Y.Z  
   **Descrição**: texto objetivo do que mudou e impacto (pode listar itens separados por ponto e vírgula).
+
+## 0.4.6 - 2026-01-13
+
+#### Protocol: 1671230
+
+### Breaking
+- N/A
+
+### Removed
+- N/A
+
+### Added
+- N/A
+
+### Changed
+- Corrige chat IG: evita conflito de CSS/JS entre bolhas de mensagem e bolha flutuante (renomeia para FAB), garante exibição do card de resposta, melhora sticky header/footer com padding de segurança e scroll contido no painel (mobile).
 
 ## 0.4.5 - 2026-01-13
 

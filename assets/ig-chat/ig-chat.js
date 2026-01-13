@@ -217,15 +217,16 @@
     });
   }
 
-  function ensureBubble($root) {
+  function ensureFab($root) {
     if (!$root) return null;
-    var existing = qs('[data-war-ig-bubble="1"]');
+    var existing = qs('[data-war-ig-fab="1"]');
     if (existing) return existing;
 
-    var btn = el('button', 'war-ig-bubble');
+    var btn = el('button', 'war-ig-fab');
     btn.type = 'button';
-    btn.setAttribute('data-war-ig-bubble', '1');
+    btn.setAttribute('data-war-ig-fab', '1');
     btn.setAttribute('aria-label', 'Abrir chat');
+    btn.style.display = 'none';
 
     // Prefer avatar do header.
     var $avatarImg = qs('.war-ig-avatar img', $root);
@@ -237,7 +238,7 @@
     } else {
       var nameEl = qs('.war-ig-name', $root);
       var initial = (nameEl && nameEl.textContent) ? String(nameEl.textContent).trim().slice(0, 1).toUpperCase() : 'C';
-      var fb = el('div', 'war-ig-bubble__fallback');
+      var fb = el('div', 'war-ig-fab__fallback');
       fb.textContent = initial;
       btn.appendChild(fb);
     }
@@ -246,12 +247,14 @@
     return btn;
   }
 
-  function setMinimized($root, minimized) {
+  function setMinimized($root, minimized, $fab) {
     if (!$root) return;
     if (minimized) {
       $root.classList.add('war-ig-chat--minimized');
+      if ($fab) $fab.style.display = 'flex';
     } else {
       $root.classList.remove('war-ig-chat--minimized');
+      if ($fab) $fab.style.display = 'none';
     }
   }
 
@@ -284,10 +287,10 @@
       $back.style.cursor = 'pointer';
       $back.setAttribute('aria-label', 'Minimizar');
 
-      var $bubble = ensureBubble($root);
-      if ($bubble) {
-        $bubble.addEventListener('click', function () {
-          setMinimized($root, false);
+      var $fab = ensureFab($root);
+      if ($fab) {
+        $fab.addEventListener('click', function () {
+          setMinimized($root, false, $fab);
           // foco no input ao reabrir
           setTimeout(function () { if ($input) $input.focus(); }, 60);
           debugAppend({ ts: nowMs(), type: 'minimize_restore' });
@@ -295,7 +298,7 @@
       }
 
       $back.addEventListener('click', function () {
-        setMinimized($root, true);
+        setMinimized($root, true, $fab);
         debugAppend({ ts: nowMs(), type: 'minimize_to_bubble' });
       });
     }

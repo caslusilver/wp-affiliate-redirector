@@ -46,6 +46,8 @@
   top: 0;
   z-index: 3;
   background: var(--war-ig-panel);
+  /* usado pelo padding de segurança das mensagens */
+  --war-ig-header-safe: 56px;
 }
 
 .war-ig-back{
@@ -99,6 +101,12 @@
   display:flex;
   flex-direction:column;
   gap:12px;
+  /* Evita “scroll vazar” para a página no mobile */
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  /* “Padding de segurança” para não cobrir mensagens atrás do header/footer */
+  padding-top: calc(16px + var(--war-ig-header-safe, 56px));
+  padding-bottom: calc(16px + var(--war-ig-footer-safe, 68px) + env(safe-area-inset-bottom));
 }
 
 .war-ig-row{
@@ -204,6 +212,8 @@
   z-index: 3;
   box-shadow: 0 -10px 22px rgba(0,0,0,.28);
   padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  /* usado pelo padding de segurança das mensagens */
+  --war-ig-footer-safe: 68px;
 }
 .war-ig-input__field{
   flex:1;
@@ -252,7 +262,7 @@
   display:none;
 }
 
-.war-ig-bubble{
+.war-ig-fab{
   position:fixed;
   right:16px;
   bottom:16px;
@@ -270,14 +280,14 @@
   overflow:hidden;
 }
 
-.war-ig-bubble img{
+.war-ig-fab img{
   width:100%;
   height:100%;
   object-fit:cover;
   display:block;
 }
 
-.war-ig-bubble__fallback{
+.war-ig-fab__fallback{
   width:100%;
   height:100%;
   display:grid;
@@ -285,10 +295,6 @@
   font-weight:900;
   color:var(--war-ig-text);
   letter-spacing:.2px;
-}
-
-.war-ig-chat--minimized .war-ig-bubble{
-  display:flex;
 }
 
 
