@@ -4,8 +4,8 @@
 
 ### Changed
 - **Versão atual**: v0.4.4  
-  **Versão sugerida após a mudança**: vX.Y.Z  
-  **Descrição**: texto objetivo do que mudou e impacto (pode listar itens separados por ponto e vírgula).
+  **Versão sugerida após a mudança**: v0.4.5  
+  **Descrição**: Implementa melhorias de UI/UX do PRD v0.4.5: keywords visíveis no card do painel e feedback visual ao salvar; chat com header/footer fixos e sombra leve no footer; toggles no admin para webhook (fallback) e minimizar chat em bolha (defaults desabilitados).
 
 ## 0.4.4 - 2026-01-13
 

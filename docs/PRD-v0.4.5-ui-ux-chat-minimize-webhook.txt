@@ -1,0 +1,192 @@
+================================================================================
+PRD - WP AFFILIATE REDIRECTOR v0.4.5
+================================================================================
+Data: 13/01/2026
+Versão Atual: 0.4.4
+Nova Versão: 0.4.5
+
+================================================================================
+RESUMO (O QUE ENTRA NA 0.4.5)
+================================================================================
+1) Painel de links ([war_link_manager])
+   - Exibir keywords associadas diretamente na lista (card), sem precisar abrir “Editar”.
+   - Animação/feedback visual claro ao concluir criação/edição com sucesso.
+
+2) Chat IG ([war_ig_chat])
+   - Header fixo no topo (foto + nome + status), mantendo proporções atuais em mobile e desktop.
+   - Footer fixo (campo de palavra-chave + enviar), sem ficar “solto” na página; mensagens rolam no meio.
+   - Drop-shadow leve APENAS no footer (não no header).
+   - Botão voltar (←) minimiza o chat e vira uma bolha flutuante no canto inferior direito.
+   - Opção no admin para habilitar/desabilitar a minimização em bolha.
+
+3) Admin (Affiliate Links → Integrações)
+   - Adicionar opção para habilitar/desabilitar webhook (fallback). Default: DESABILITADO.
+   - Mantém compatibilidade para futura integração com agente de IA (persistência de conversa será futuro).
+
+================================================================================
+CONTEXTO / PROBLEMA
+================================================================================
+- O usuário precisa acessar keywords rapidamente no painel sem entrar em edição.
+- Falta feedback visual claro quando uma edição é salva (UX).
+- No chat, header/footer precisam ficar fixos como um app (mensagens rolam entre eles).
+- Futuro: o webhook será usado para conectar a um agente de IA; por enquanto deve ficar desabilitado.
+- UX adicional: minimizar chat para bolha flutuante e reabrir, com controle via admin.
+
+================================================================================
+OBJETIVOS
+================================================================================
+- Melhorar UX e reduzir cliques no painel de links.
+- Melhorar UX do chat (layout fixo, previsível e responsivo).
+- Preparar toggles no admin para mudar usabilidade sem refatorar depois.
+- Implementar minimização de chat de forma segura e opcional.
+
+================================================================================
+NÃO-OBJETIVOS (NESTA VERSÃO)
+================================================================================
+- Persistir histórico de conversa no banco (CPT/tabela). Nesta versão: continua em sessionStorage.
+- Implementar agente de IA / protocolos de conversa longos.
+- Alterar o modelo visual principal do chat (cores/tipografia base), apenas ajustes estruturais.
+
+================================================================================
+FUNCIONALIDADE 1: KEYWORDS VISÍVEIS NO CARD DO PAINEL
+================================================================================
+Objetivo:
+Exibir keywords associadas diretamente no card da lista do `[war_link_manager]`.
+
+Requisitos:
+- Mostrar label “Keywords:” + lista em chips/pílulas (separadas por vírgula).
+- Se keywords estiver vazio, não exibir a seção.
+- Deve funcionar com listagem via AJAX.
+
+Critérios de Aceite:
+- Um link com keywords “futuro, pdf” exibe dois chips “futuro” e “pdf” no card.
+- Um link sem keywords não exibe a seção.
+
+Arquivos:
+- assets/js/manager.js
+- assets/css/manager.css
+- inc/frontend/class-ajax-links.php (garantir retorno do campo `keywords` em listagem)
+
+================================================================================
+FUNCIONALIDADE 2: ANIMAÇÃO/FEEDBACK AO SALVAR (CRIAR/EDITAR)
+================================================================================
+Objetivo:
+Dar feedback visual claro de que a criação/edição concluiu com sucesso.
+
+Requisitos:
+- Após sucesso no create/update via AJAX, destacar o card do item salvo por ~1s.
+- Não deve depender de alert() nem recarregar a página inteira.
+- Deve funcionar mesmo quando a lista recarrega via AJAX.
+
+Critérios de Aceite:
+- Ao salvar um item, o card correspondente recebe highlight/anim e depois volta ao normal.
+
+Arquivos:
+- assets/js/manager.js
+- assets/css/manager.css
+
+================================================================================
+FUNCIONALIDADE 3: CHAT COM HEADER/FOOTER FIXOS + SOMBRA NO FOOTER
+================================================================================
+Objetivo:
+Transformar o chat em layout “app-like”:
+header fixo, footer fixo, mensagens rolando no meio; sombra leve no footer.
+
+Requisitos:
+- Header fixo no topo do painel do chat.
+- Footer fixo no rodapé do painel do chat.
+- Mensagens (`.war-ig-messages`) rolam entre header e footer.
+- Drop-shadow APENAS no footer.
+- Responsivo: manter a proporção atual (tamanhos e espaçamentos compatíveis com mobile/desktop).
+
+Critérios de Aceite:
+- Ao rolar as mensagens, header e footer continuam visíveis.
+- Footer apresenta drop-shadow leve; header sem shadow.
+
+Arquivos:
+- assets/ig-chat/ig-chat.css
+- templates/ig-chat.php (se necessário para wrappers)
+
+================================================================================
+FUNCIONALIDADE 4: MINIMIZAR CHAT EM BOLHA FLUTUANTE (COM TOGGLE)
+================================================================================
+Objetivo:
+Ao clicar no botão voltar (←) no header, minimizar o chat e exibir uma bolha flutuante
+no canto inferior direito do site; ao clicar na bolha, reabrir o chat.
+
+Requisitos:
+- Feature controlada por opção no admin:
+  - Default: DESABILITADO.
+  - Quando habilitado:
+    - botão ← fica ativo
+    - clicar ← minimiza
+    - surge bolha flutuante no canto inferior direito
+    - clicar bolha reabre e foca input
+- A bolha deve ser acessível:
+  - aria-label “Abrir chat”
+- Visual:
+  - bolha circular 56x56 (ou similar), com avatar se disponível; fallback com inicial.
+- Não deve interferir com scroll geral da página.
+
+Critérios de Aceite:
+- Com toggle OFF: botão ← não minimiza.
+- Com toggle ON: minimiza e reabre corretamente.
+
+Arquivos:
+- inc/admin/class-integrations.php (novo setting)
+- inc/frontend/class-ig-chat.php (passar flag via wp_localize_script)
+- assets/ig-chat/ig-chat.js (comportamento)
+- assets/ig-chat/ig-chat.css (estilos da bolha)
+
+================================================================================
+FUNCIONALIDADE 5: TOGGLE DE WEBHOOK (FUTURA IA) - DEFAULT OFF
+================================================================================
+Objetivo:
+Adicionar no admin um toggle para habilitar/desabilitar o uso do webhook, mantendo
+o fluxo local por keywords como prioridade e a compatibilidade futura.
+
+Requisitos:
+- Admin:
+  - Checkbox “Habilitar webhook (fallback)” com default DESABILITADO.
+- Backend:
+  - Em caso de não encontrar keyword local:
+    - se toggle OFF: não chama webhook; retorna mensagem padrão.
+    - se toggle ON + URL preenchida: chama webhook.
+
+Critérios de Aceite:
+- Sem match local + toggle OFF: não há chamada ao webhook.
+- Sem match local + toggle ON: webhook é chamado (se URL existir).
+
+Arquivos:
+- inc/admin/class-integrations.php
+- inc/frontend/class-ig-chat-ajax.php
+
+================================================================================
+OBSERVABILIDADE / DEBUG (PARA VALIDAR TESTES)
+================================================================================
+Objetivo:
+Facilitar diagnóstico quando houver cache/CDN, e permitir o usuário enviar logs.
+
+Requisitos:
+- Quando debug estiver ativado (WAR_DEBUG_MODE=true):
+  - painel do manager registra eventos relevantes (listagem, render, save, qrcode).
+  - chat registra eventos relevantes (init, request/response, minimizar/reabrir).
+
+Critérios de Aceite:
+- Usuário consegue copiar logs e enviar no chat para validação.
+
+================================================================================
+CHECKLIST DE IMPLEMENTAÇÃO
+================================================================================
+[ ] Exibir keywords no card (manager.js + manager.css)
+[ ] Feedback “salvo” com highlight/anim (manager.js + manager.css)
+[ ] Header/footer fixos + sombra no footer (ig-chat.css)
+[ ] Minimizar em bolha + toggle no admin (integrations.php + ig-chat.php + ig-chat.js + ig-chat.css)
+[ ] Toggle de webhook (integrations.php + ig-chat-ajax.php)
+[ ] Atualizar versão para 0.4.5
+[ ] Atualizar CHANGELOG.md em [Unreleased] (template)
+[ ] Testes manuais (painel + chat)
+
+================================================================================
+FIM DO DOCUMENTO
+================================================================================
