@@ -3,9 +3,25 @@
 ## [Unreleased]
 
 ### Changed
-- **Versão atual**: v0.4.6  
+- **Versão atual**: v0.4.7  
   **Versão sugerida após a mudança**: vX.Y.Z  
   **Descrição**: texto objetivo do que mudou e impacto (pode listar itens separados por ponto e vírgula).
+
+## 0.4.7 - 2026-01-13
+
+#### Protocol: b683077
+
+### Breaking
+- N/A
+
+### Removed
+- N/A
+
+### Added
+- N/A
+
+### Changed
+- Chat IG: modo full screen no mobile (sem travar a página quando minimizado), corrige media query que quebrava o padding de segurança do header/footer e aplica máscara circular na foto do FAB minimizado.
 
 ## 0.4.6 - 2026-01-13
 

@@ -253,13 +253,59 @@
 }
 
 @media (max-width: 420px){
-  .war-ig-chat__panel{ height:min(720px, 92vh); }
-  .war-ig-messages{ padding:14px; }
+  .war-ig-chat__panel{
+    height:min(720px, 92vh);
+    height:min(720px, 92svh);
+    height:min(720px, 92dvh);
+  }
+
+  /* não sobrescrever padding-top/bottom calculados (segurança header/footer) */
+  .war-ig-messages{
+    padding-left:14px;
+    padding-right:14px;
+    padding-top: calc(14px + var(--war-ig-header-safe, 56px));
+    padding-bottom: calc(14px + var(--war-ig-footer-safe, 68px) + env(safe-area-inset-bottom));
+  }
 }
 
 /* MINIMIZAR (bolha flutuante) */
 .war-ig-chat--minimized .war-ig-chat__panel{
   display:none;
+}
+
+/* FULL SCREEN MOBILE (opcional) */
+@media (max-width: 600px){
+  .war-ig-chat{
+    position:fixed;
+    inset:0;
+    z-index:999998;
+    padding:0;
+    background:var(--war-ig-bg);
+  }
+
+  /* quando minimizado, não bloquear a página (FAB fica no body) */
+  .war-ig-chat.war-ig-chat--minimized{
+    position:static;
+    inset:auto;
+    padding:0;
+    background:transparent;
+    width:0;
+    height:0;
+    overflow:visible;
+  }
+
+  .war-ig-chat__panel{
+    width:100vw;
+    height:100vh;
+    height:100svh;
+    height:100dvh;
+    max-width:none;
+    border-radius:0;
+    border-left:0;
+    border-right:0;
+    border-top:0;
+    border-bottom:0;
+  }
 }
 
 .war-ig-fab{
@@ -285,6 +331,7 @@
   height:100%;
   object-fit:cover;
   display:block;
+  border-radius:999px;
 }
 
 .war-ig-fab__fallback{

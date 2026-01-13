@@ -3,7 +3,7 @@
  * Plugin Name: WP Affiliate Redirector
  * Plugin URI: https://github.com/caslusilver/wp-affiliate-redirector
  * Description: Gerenciador de links de afiliado com página intermediária (loader) e redirecionamento configurável.
- * Version: 0.4.6
+ * Version: 0.4.7
  * Author: Lucas Andrade / AI
  * Author URI: https://github.com/caslusilver
  * License: GPL2
