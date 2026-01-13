@@ -2,6 +2,30 @@
 
 ## [Unreleased]
 
+## 0.4.3 - 2026-01-12
+
+### Breaking
+- N/A
+
+### Removed
+- N/A
+
+### Added
+- N/A
+
+### Changed
+- Adiciona cache-busting por filemtime nos assets do painel/chat
+- Adiciona logs de build/debug (front + AJAX) para facilitar validação das features de QR Code e keywords
+
+### UI (Cards)
+- N/A
+
+### Fixed
+- N/A
+
+### Meta
+- 6008dbf - chore(release): v0.4.3
+
 ## 0.4.2 - 2026-01-12
 
 ### Breaking
