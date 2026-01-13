@@ -24,7 +24,7 @@
 - N/A
 
 ### Meta
-- 6008dbf - chore(release): v0.4.3
+- 430c529 - chore(release): v0.4.3
 
 ## 0.4.2 - 2026-01-12
 
