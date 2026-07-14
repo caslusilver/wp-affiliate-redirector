@@ -58,6 +58,11 @@ class WAR_Affiliate_List {
 			return;
 		}
 
+		// Enqueue Media Library se usuário tiver permissão
+		if (current_user_can('manage_options') || current_user_can('upload_files')) {
+			wp_enqueue_media();
+		}
+
 		$plugin_version = function_exists('WP_AFFILIATE_REDIRECTOR_get_version') ? WP_AFFILIATE_REDIRECTOR_get_version() : '0.0.0';
 		$css_file = WAR_PLUGIN_DIR . 'assets/css/affiliate-list.css';
 		$js_file = WAR_PLUGIN_DIR . 'assets/js/affiliate-list.js';

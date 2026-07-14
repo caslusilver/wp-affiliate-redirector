@@ -16,6 +16,7 @@ class WAR_Ajax_Links {
 
 	public static function init() {
 		add_action('wp_ajax_war_links_list', [__CLASS__, 'list_links']);
+		add_action('wp_ajax_war_links_get', [__CLASS__, 'get_link']);
 		add_action('wp_ajax_war_links_create', [__CLASS__, 'create_link']);
 		add_action('wp_ajax_war_links_update', [__CLASS__, 'update_link']);
 		add_action('wp_ajax_war_links_delete', [__CLASS__, 'delete_link']);
@@ -87,6 +88,34 @@ class WAR_Ajax_Links {
 		}
 
 		return $buttons_clean;
+	}
+
+	private static function sanitize_list_ids($raw) {
+		// Aceita array ou JSON string
+		if (is_string($raw)) {
+			$decoded = json_decode($raw, true);
+			if (is_array($decoded)) {
+				$raw = $decoded;
+			} else {
+				return [];
+			}
+		}
+
+		if (!is_array($raw)) {
+			return [];
+		}
+
+		// Limpar e validar IDs
+		$ids_clean = [];
+		foreach ($raw as $id) {
+			$id = absint($id);
+			if ($id > 0) {
+				$ids_clean[] = $id;
+			}
+		}
+
+		// Remover duplicados
+		return array_values(array_unique($ids_clean));
 	}
 
 	public static function list_links() {
@@ -164,6 +193,67 @@ class WAR_Ajax_Links {
 		]);
 	}
 
+	/**
+	 * Obter um link específico por ID.
+	 * Usado pelo editor inline para carregar dados completos do link.
+	 */
+	public static function get_link() {
+		self::guard();
+
+		$post_id = isset($_POST['id']) ? absint($_POST['id']) : 0;
+		if (!$post_id) {
+			wp_send_json_error(['message' => 'ID é obrigatório.'], 400);
+		}
+
+		if (get_post_type($post_id) !== 'war_link') {
+			wp_send_json_error(['message' => 'Link inválido.'], 400);
+		}
+
+		$post = get_post($post_id);
+		if (!$post) {
+			wp_send_json_error(['message' => 'Link não encontrado.'], 404);
+		}
+
+		$meta_key = self::meta_key_redirect_url();
+
+		// Obter listas (taxonomia war_list)
+		$lists = wp_get_post_terms($post_id, 'war_list', ['fields' => 'all']);
+		$list_names = [];
+		$list_ids = [];
+		if (!is_wp_error($lists) && !empty($lists)) {
+			foreach ($lists as $term) {
+				$list_names[] = $term->name;
+				$list_ids[] = $term->term_id;
+			}
+		}
+
+		// Obter botões
+		$buttons = get_post_meta($post_id, 'war_buttons', true);
+		if (!is_array($buttons)) {
+			$buttons = [];
+		}
+
+		$item = [
+			'id' => $post_id,
+			'title' => get_the_title($post_id),
+			'slug' => (string) $post->post_name,
+			'public_url' => get_permalink($post_id),
+			'destination' => (string) get_post_meta($post_id, $meta_key, true),
+			'image_url' => (string) get_post_meta($post_id, 'war_image_url', true),
+			'description' => (string) get_post_meta($post_id, 'war_description', true),
+			'buttons' => $buttons,
+			'clicks_total' => (int) get_post_meta($post_id, 'war_clicks_total', true),
+			'keywords' => (string) get_post_meta($post_id, 'war_keywords', true),
+			'lists' => $list_names,
+			'list_ids' => $list_ids,
+			'menu_order' => (int) $post->menu_order,
+		];
+
+		WAR_Debug::log('AJAX Links: Link obtido', ['post_id' => $post_id]);
+
+		wp_send_json_success($item);
+	}
+
 	public static function create_link() {
 		self::guard();
 
@@ -174,10 +264,11 @@ class WAR_Ajax_Links {
 		$image_url = isset($_POST['image_url']) ? self::sanitize_destination(wp_unslash($_POST['image_url'])) : '';
 		$description = isset($_POST['description']) ? sanitize_textarea_field((string) wp_unslash($_POST['description'])) : '';
 		$buttons_raw = isset($_POST['buttons']) ? wp_unslash($_POST['buttons']) : '';
-		$list_ids = isset($_POST['list_ids']) ? array_map('absint', (array) $_POST['list_ids']) : [];
+		$list_ids_raw = isset($_POST['list_ids']) ? wp_unslash($_POST['list_ids']) : [];
 
-		// Sanitizar botões
+		// Sanitizar botões e listas
 		$buttons = self::sanitize_buttons($buttons_raw);
+		$list_ids = self::sanitize_list_ids($list_ids_raw);
 
 		WAR_Debug::log('AJAX Links: Criando', [
 			'title' => $title,
@@ -267,10 +358,11 @@ class WAR_Ajax_Links {
 		$image_url = isset($_POST['image_url']) ? self::sanitize_destination(wp_unslash($_POST['image_url'])) : '';
 		$description = isset($_POST['description']) ? sanitize_textarea_field((string) wp_unslash($_POST['description'])) : '';
 		$buttons_raw = isset($_POST['buttons']) ? wp_unslash($_POST['buttons']) : '';
-		$list_ids = isset($_POST['list_ids']) ? array_map('absint', (array) $_POST['list_ids']) : [];
+		$list_ids_raw = isset($_POST['list_ids']) ? wp_unslash($_POST['list_ids']) : [];
 
-		// Sanitizar botões
+		// Sanitizar botões e listas
 		$buttons = self::sanitize_buttons($buttons_raw);
+		$list_ids = self::sanitize_list_ids($list_ids_raw);
 
 		WAR_Debug::log('AJAX Links: Atualizando', [
 			'post_id' => $post_id,
