@@ -285,6 +285,11 @@
     $find($form, '[data-war-field="slug"]').val('').prop('disabled', false);
     $find($form, '[data-war-field="destination"]').val('');
     $find($form, '[data-war-field="keywords"]').val('');
+    $find($form, '[data-war-field="image_url"]').val('');
+    $find($form, '[data-war-field="description"]').val('');
+    resetImagePreview(root);
+    resetButtonsEditor(root);
+    resetListsCheckboxes(root);
     $find($form, '[data-war-action="submit"]').text(getStr('btn_create', 'Criar'));
     $find($form, '[data-war-action="cancel"]').hide();
     $find(root, '[data-war-form-title="1"]').text(getStr('btn_create', 'Criar'));
@@ -297,6 +302,27 @@
     $find($form, '[data-war-field="slug"]').val(item.slug || '').prop('disabled', true);
     $find($form, '[data-war-field="destination"]').val(item.destination || '');
     $find($form, '[data-war-field="keywords"]').val(item.keywords || '');
+    $find($form, '[data-war-field="image_url"]').val(item.image_url || '');
+    $find($form, '[data-war-field="description"]').val(item.description || '');
+    
+    if (item.image_url) {
+      setImagePreview(root, item.image_url);
+    } else {
+      resetImagePreview(root);
+    }
+    
+    if (item.buttons && item.buttons.length > 0) {
+      loadButtonsIntoEditor(root, item.buttons);
+    } else {
+      resetButtonsEditor(root);
+    }
+    
+    if (item.list_ids && item.list_ids.length > 0) {
+      setListsCheckboxes(root, item.list_ids);
+    } else {
+      resetListsCheckboxes(root);
+    }
+    
     $find($form, '[data-war-action="submit"]').text(getStr('btn_update', 'Atualizar'));
     $find($form, '[data-war-action="cancel"]').show();
     $find(root, '[data-war-form-title="1"]').text('Editar');
@@ -311,6 +337,134 @@
       destination: ($tr.attr('data-war-destination') || '').trim(),
       keywords: ($tr.attr('data-war-keywords') || '').trim()
     };
+  }
+
+  // ====================================================================
+  // FUNÇÕES PARA IMAGEM
+  // ====================================================================
+  function resetImagePreview(root) {
+    var $preview = $find(root, '[data-war-image-preview="1"]');
+    $preview.html('<div class="war-image-placeholder" style="text-align:center;color:#999;padding:20px;"><div style="font-size:48px;margin-bottom:8px;">📷</div><div>Nenhuma imagem selecionada</div></div>');
+    $find(root, '[data-war-remove-image="1"]').hide();
+  }
+
+  function setImagePreview(root, url) {
+    var $preview = $find(root, '[data-war-image-preview="1"]');
+    $preview.html('<img src="' + escapeHtml(url) + '" alt="Preview" style="max-width:100%;height:auto;border-radius:8px;" />');
+    $find(root, '[data-war-remove-image="1"]').show();
+  }
+
+  // ====================================================================
+  // FUNÇÕES PARA BOTÕES
+  // ====================================================================
+  var buttonCounter = 0;
+
+  function resetButtonsEditor(root) {
+    var $list = $find(root, '[data-war-buttons-list="1"]');
+    $list.html('<div class="war-no-buttons" style="color:#999;font-style:italic;padding:12px;background:#f9f9f9;border-radius:4px;">Nenhum botão configurado. Será usado o campo "URL de destino" principal.</div>');
+  }
+
+  function addButtonToEditor(root, label, url) {
+    var $list = $find(root, '[data-war-buttons-list="1"]');
+    $list.find('.war-no-buttons').remove();
+    
+    var idx = buttonCounter++;
+    var html = '<div class="war-button-item" data-button-index="' + idx + '" style="background:#f6f7f7;padding:12px;margin-bottom:8px;border-radius:4px;border-left:3px solid #2271b1;">' +
+      '<div style="margin-bottom:8px;">' +
+        '<label style="display:block;font-weight:600;margin-bottom:4px;font-size:13px;">Label do Botão:</label>' +
+        '<input type="text" data-button-label="1" value="' + escapeHtml(label || '') + '" placeholder="Ex: Comprar na Amazon" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;" />' +
+      '</div>' +
+      '<div style="margin-bottom:8px;">' +
+        '<label style="display:block;font-weight:600;margin-bottom:4px;font-size:13px;">URL de Destino:</label>' +
+        '<input type="url" data-button-url="1" value="' + escapeHtml(url || '') + '" placeholder="https://exemplo.com/produto" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:4px;" />' +
+      '</div>' +
+      '<button type="button" class="war-btn" data-war-remove-button="1" style="background:#b32d2e;color:#fff;">Remover Botão</button>' +
+    '</div>';
+    
+    $list.append(html);
+  }
+
+  function loadButtonsIntoEditor(root, buttons) {
+    resetButtonsEditor(root);
+    if (!buttons || !buttons.length) return;
+    
+    buttons.forEach(function (btn) {
+      addButtonToEditor(root, btn.label || '', btn.url || '');
+    });
+  }
+
+  function collectButtonsFromEditor(root) {
+    var buttons = [];
+    $find(root, '[data-war-buttons-list="1"]').find('.war-button-item').each(function () {
+      var $item = $(this);
+      var label = ($item.find('[data-button-label="1"]').val() || '').trim();
+      var url = ($item.find('[data-button-url="1"]').val() || '').trim();
+      
+      if (label && url) {
+        buttons.push({ label: label, url: url });
+      }
+    });
+    return buttons;
+  }
+
+  // ====================================================================
+  // FUNÇÕES PARA LISTAS
+  // ====================================================================
+  function loadLists(root) {
+    post('war_get_lists', {})
+      .done(function (res) {
+        debugAppend({ ts: Date.now(), type: 'ajax_response', action: 'war_get_lists', response: res });
+        if (!res || !res.success || !res.data || !res.data.lists) {
+          renderListsCheckboxes(root, []);
+          return;
+        }
+        renderListsCheckboxes(root, res.data.lists);
+      })
+      .fail(function () {
+        debugAppend({ ts: Date.now(), type: 'ajax_error', action: 'war_get_lists' });
+        renderListsCheckboxes(root, []);
+      });
+  }
+
+  function renderListsCheckboxes(root, lists) {
+    var $container = $find(root, '[data-war-lists-container="1"]');
+    
+    if (!lists || lists.length === 0) {
+      $container.html('<div style="color:#999;font-style:italic;padding:12px;">Nenhuma lista disponível.</div>');
+      return;
+    }
+
+    var html = '';
+    lists.forEach(function (list) {
+      html += '<label style="display:block;padding:6px 0;cursor:pointer;">' +
+        '<input type="checkbox" data-list-checkbox="1" value="' + escapeHtml(list.term_id) + '" style="margin-right:8px;" />' +
+        '<span>' + escapeHtml(list.name) + '</span>' +
+      '</label>';
+    });
+    
+    $container.html(html);
+  }
+
+  function resetListsCheckboxes(root) {
+    $find(root, '[data-list-checkbox="1"]').prop('checked', false);
+  }
+
+  function setListsCheckboxes(root, termIds) {
+    resetListsCheckboxes(root);
+    if (!termIds || !termIds.length) return;
+    
+    termIds.forEach(function (tid) {
+      $find(root, '[data-list-checkbox="1"][value="' + tid + '"]').prop('checked', true);
+    });
+  }
+
+  function collectSelectedLists(root) {
+    var ids = [];
+    $find(root, '[data-list-checkbox="1"]:checked').each(function () {
+      var tid = parseInt($(this).val(), 10);
+      if (tid) ids.push(tid);
+    });
+    return ids;
   }
 
   function bind(root) {
@@ -337,10 +491,70 @@
 
     // initial load
     loadList(root, 1);
+    loadLists(root);
 
     // refresh
     root.on('click', '[data-war-refresh="1"]', function () {
       loadList(root, root.data('warPage') || 1);
+    });
+
+    // ====================================================================
+    // IMAGE UPLOAD (wp.media)
+    // ====================================================================
+    var mediaUploader = null;
+    
+    root.on('click', '[data-war-select-image="1"]', function (e) {
+      e.preventDefault();
+      
+      if (!window.wp || !window.wp.media) {
+        alert('WordPress Media Library não disponível.');
+        return;
+      }
+      
+      if (mediaUploader) {
+        mediaUploader.open();
+        return;
+      }
+      
+      mediaUploader = window.wp.media({
+        title: 'Selecionar Imagem do Produto',
+        button: { text: 'Usar esta imagem' },
+        multiple: false
+      });
+      
+      mediaUploader.on('select', function () {
+        var attachment = mediaUploader.state().get('selection').first().toJSON();
+        var url = attachment.url || '';
+        
+        $find(root, '[data-war-image-input="1"]').val(url);
+        setImagePreview(root, url);
+      });
+      
+      mediaUploader.open();
+    });
+    
+    root.on('click', '[data-war-remove-image="1"]', function (e) {
+      e.preventDefault();
+      $find(root, '[data-war-image-input="1"]').val('');
+      resetImagePreview(root);
+    });
+
+    // ====================================================================
+    // BUTTONS EDITOR
+    // ====================================================================
+    root.on('click', '[data-war-add-button="1"]', function (e) {
+      e.preventDefault();
+      addButtonToEditor(root, '', '');
+    });
+    
+    root.on('click', '[data-war-remove-button="1"]', function (e) {
+      e.preventDefault();
+      $(this).closest('.war-button-item').remove();
+      
+      var $list = $find(root, '[data-war-buttons-list="1"]');
+      if ($list.find('.war-button-item').length === 0) {
+        resetButtonsEditor(root);
+      }
     });
 
     // search
@@ -493,6 +707,10 @@
       var slug = ($find($form, '[data-war-field="slug"]').val() || '').trim();
       var destination = ($find($form, '[data-war-field="destination"]').val() || '').trim();
       var keywords = ($find($form, '[data-war-field="keywords"]').val() || '').trim();
+      var imageUrl = ($find($form, '[data-war-field="image_url"]').val() || '').trim();
+      var description = ($find($form, '[data-war-field="description"]').val() || '').trim();
+      var buttons = collectButtonsFromEditor(root);
+      var listIds = collectSelectedLists(root);
 
       if (!title || !destination) {
         setStatus(root, getStr('status_fill', 'Preencha título e destino.'));
@@ -500,7 +718,17 @@
       }
 
       var action = id ? 'war_links_update' : 'war_links_create';
-      var payload = { id: id, title: title, slug: slug, destination: destination, keywords: keywords };
+      var payload = { 
+        id: id, 
+        title: title, 
+        slug: slug, 
+        destination: destination, 
+        keywords: keywords,
+        image_url: imageUrl,
+        description: description,
+        buttons: JSON.stringify(buttons),
+        list_ids: JSON.stringify(listIds)
+      };
       setStatus(root, id ? getStr('status_updated', 'Atualizando...') : getStr('status_created', 'Criando...'));
 
       post(action, payload)
