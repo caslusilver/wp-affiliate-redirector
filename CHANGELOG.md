@@ -3,9 +3,44 @@
 ## [Unreleased]
 
 ### Changed
-- **Versão atual**: v0.5.1  
+- **Versão atual**: v0.6.0  
   **Versão sugerida após a mudança**: vX.Y.Z  
   **Descrição**: texto objetivo do que mudou e impacto (pode listar itens separados por ponto e vírgula).
+
+## 0.6.0 - 2026-01-14
+
+#### Protocol: 6b96274
+
+### Breaking
+- N/A
+
+### Removed
+- N/A
+
+### Added
+- Meta fields: `war_description` (textarea) e `war_buttons` (array de botões com label/url)
+- Editor inline de links via modal AJAX (sem redirecionar para wp-admin)
+- Suporte a múltiplos botões de destino por link de afiliado
+- Renderização de descrição nos cards/listas de afiliados
+- Toggle de debug nas configurações de Integrações (ativa/desativa popups sem editar código)
+- CSS completo para modal de edição inline responsivo
+- Integração wp.media no modal de edição inline
+- Campos de imagem, descrição, listas e botões no modal de edição
+- Função `sanitize_buttons()` em class-ajax-links.php para validação de arrays de botões
+- Sincronização automática: `war_redirect_url` sempre recebe a URL do primeiro botão
+
+### Changed
+- Modal de edição: abre inline ao invés de abrir wp-admin em nova aba
+- Botões de afiliado: agora suporta múltiplos botões customizados por link
+- Descrição renderizada em ambas as visualizações (list/card)
+- `WAR_Config::is_debug()` agora lê opção `debug_enabled` de `war_integrations_settings`
+- AJAX endpoint `war_links_list` retorna `description` e `buttons`
+- AJAX endpoint `war_links_update` salva `description` e `buttons`
+- Template link-manager.php expandido com campos de imagem, descrição e editor de botões
+- Fallback: se `war_buttons` vazio, usa `war_redirect_url` como botão único "Acessar"
+
+### Fixed
+- Botões/ícones opacos em alguns temas (adicionado `opacity: 1 !important`)
 
 ## 0.5.1 - 2026-01-14
 
