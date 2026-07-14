@@ -28,6 +28,8 @@ class WAR_Admin_Integrations {
 			'rate_limit_ms' => 2500,
 			// UX do chat (widget)
 			'chat_minimize_enabled' => 0,
+			// Debug
+			'debug_enabled' => 0,
 		];
 	}
 
@@ -49,6 +51,7 @@ class WAR_Admin_Integrations {
 			'secret' => sanitize_text_field((string) $merged['secret']),
 			'rate_limit_ms' => max(0, (int) $merged['rate_limit_ms']),
 			'chat_minimize_enabled' => !empty($merged['chat_minimize_enabled']),
+			'debug_enabled' => !empty($merged['debug_enabled']),
 		];
 	}
 
@@ -83,6 +86,12 @@ class WAR_Admin_Integrations {
 			'chat_minimize_enabled',
 			__('Permitir minimizar o chat em bolha flutuante', WAR_TEXT_DOMAIN),
 			__('Quando ativo, o botão ← minimiza o chat e mostra uma bolha no canto inferior direito.', WAR_TEXT_DOMAIN)
+		);
+
+		self::add_checkbox_field(
+			'debug_enabled',
+			__('Exibir pop-up de debug', WAR_TEXT_DOMAIN),
+			__('Quando ativo, mostra informações de debug em pop-ups nas integrações.', WAR_TEXT_DOMAIN)
 		);
 
 		self::add_text_field('header_name', __('Nome exibido', WAR_TEXT_DOMAIN), 'text', '');
@@ -196,6 +205,7 @@ class WAR_Admin_Integrations {
 			'secret' => sanitize_text_field((string) $merged['secret']),
 			'rate_limit_ms' => max(0, (int) $merged['rate_limit_ms']),
 			'chat_minimize_enabled' => !empty($merged['chat_minimize_enabled']) ? 1 : 0,
+			'debug_enabled' => !empty($merged['debug_enabled']) ? 1 : 0,
 		];
 	}
 
