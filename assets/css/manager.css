@@ -325,7 +325,7 @@
   height: 14px;
   display: block;
   object-fit: contain;
-  opacity: 0.9;
+  opacity: 1 !important;
 }
 
 .war-clicks__label {
@@ -441,6 +441,7 @@
   height: 18px;
   display: block;
   object-fit: contain;
+  opacity: 1 !important;
 }
 
 .war-action-icon.war-loading {
@@ -482,6 +483,7 @@
   width: 18px;
   height: 18px;
   display: block;
+  opacity: 1 !important;
 }
 
 .war-copied {
