@@ -354,15 +354,24 @@ class WAR_Ajax_Links {
 
 		$title = isset($_POST['title']) ? sanitize_text_field((string) wp_unslash($_POST['title'])) : '';
 		$destination = isset($_POST['destination']) ? self::sanitize_destination(wp_unslash($_POST['destination'])) : '';
-		$keywords = isset($_POST['keywords']) ? sanitize_textarea_field((string) wp_unslash($_POST['keywords'])) : '';
-		$image_url = isset($_POST['image_url']) ? self::sanitize_destination(wp_unslash($_POST['image_url'])) : '';
-		$description = isset($_POST['description']) ? sanitize_textarea_field((string) wp_unslash($_POST['description'])) : '';
-		$buttons_raw = isset($_POST['buttons']) ? wp_unslash($_POST['buttons']) : '';
-		$list_ids_raw = isset($_POST['list_ids']) ? wp_unslash($_POST['list_ids']) : [];
-
-		// Sanitizar botões e listas
-		$buttons = self::sanitize_buttons($buttons_raw);
-		$list_ids = self::sanitize_list_ids($list_ids_raw);
+		
+		// Campos opcionais: só processar se enviados explicitamente
+		$has_keywords = isset($_POST['keywords']);
+		$keywords = $has_keywords ? sanitize_textarea_field((string) wp_unslash($_POST['keywords'])) : null;
+		
+		$has_image = isset($_POST['image_url']);
+		$image_url = $has_image ? self::sanitize_destination(wp_unslash($_POST['image_url'])) : null;
+		
+		$has_description = isset($_POST['description']);
+		$description = $has_description ? sanitize_textarea_field((string) wp_unslash($_POST['description'])) : null;
+		
+		$has_buttons = isset($_POST['buttons']);
+		$buttons_raw = $has_buttons ? wp_unslash($_POST['buttons']) : null;
+		$buttons = $has_buttons ? self::sanitize_buttons($buttons_raw) : null;
+		
+		$has_lists = isset($_POST['list_ids']);
+		$list_ids_raw = $has_lists ? wp_unslash($_POST['list_ids']) : null;
+		$list_ids = $has_lists ? self::sanitize_list_ids($list_ids_raw) : null;
 
 		WAR_Debug::log('AJAX Links: Atualizando', [
 			'post_id' => $post_id,
@@ -395,49 +404,62 @@ class WAR_Ajax_Links {
 
 		update_post_meta($post_id, self::meta_key_redirect_url(), $destination);
 
-		// Atualizar ou remover imagem
-		if ($image_url !== '') {
-			update_post_meta($post_id, 'war_image_url', $image_url);
-		} else {
-			delete_post_meta($post_id, 'war_image_url');
+		// Atualizar imagem: só se campo foi enviado
+		if ($has_image) {
+			if ($image_url !== '') {
+				update_post_meta($post_id, 'war_image_url', $image_url);
+			} else {
+				// Campo veio vazio = remover imagem
+				delete_post_meta($post_id, 'war_image_url');
+			}
 		}
+		// Se $has_image = false, preserva valor existente
 
-		if ($keywords !== '') {
-			update_post_meta($post_id, 'war_keywords', trim($keywords));
-			WAR_Debug::log('AJAX Links: Keywords atualizadas', ['post_id' => $post_id, 'keywords' => $keywords]);
-		} else {
-			delete_post_meta($post_id, 'war_keywords');
-			WAR_Debug::log('AJAX Links: Keywords removidas', ['post_id' => $post_id]);
-		}
-
-		// Atualizar descrição
-		if ($description !== '') {
-			update_post_meta($post_id, 'war_description', $description);
-		} else {
-			delete_post_meta($post_id, 'war_description');
-		}
-
-		// Atualizar botões
-		if (!empty($buttons)) {
-			update_post_meta($post_id, 'war_buttons', $buttons);
-			// Sincronizar war_redirect_url com primeiro botão
-			update_post_meta($post_id, self::meta_key_redirect_url(), $buttons[0]['url']);
-		} else {
-			delete_post_meta($post_id, 'war_buttons');
-			// Se não há botões, usar destination como war_redirect_url
-			if ($destination !== '') {
-				update_post_meta($post_id, self::meta_key_redirect_url(), $destination);
+		// Atualizar keywords: só se campo foi enviado
+		if ($has_keywords) {
+			if ($keywords !== '') {
+				update_post_meta($post_id, 'war_keywords', trim($keywords));
+				WAR_Debug::log('AJAX Links: Keywords atualizadas', ['post_id' => $post_id, 'keywords' => $keywords]);
+			} else {
+				delete_post_meta($post_id, 'war_keywords');
+				WAR_Debug::log('AJAX Links: Keywords removidas', ['post_id' => $post_id]);
 			}
 		}
 
-		// Atualizar listas (taxonomia)
-		if (!empty($list_ids)) {
-			wp_set_object_terms($post_id, $list_ids, 'war_list');
-			WAR_Debug::log('AJAX Links: Listas atualizadas', ['post_id' => $post_id, 'list_ids' => $list_ids]);
-		} else {
-			// Remove todas as listas se array vazio
-			wp_set_object_terms($post_id, [], 'war_list');
-			WAR_Debug::log('AJAX Links: Listas removidas', ['post_id' => $post_id]);
+		// Atualizar descrição: só se campo foi enviado
+		if ($has_description) {
+			if ($description !== '') {
+				update_post_meta($post_id, 'war_description', $description);
+			} else {
+				delete_post_meta($post_id, 'war_description');
+			}
+		}
+
+		// Atualizar botões: só se campo foi enviado
+		if ($has_buttons) {
+			if (!empty($buttons)) {
+				update_post_meta($post_id, 'war_buttons', $buttons);
+				// Sincronizar war_redirect_url com primeiro botão
+				update_post_meta($post_id, self::meta_key_redirect_url(), $buttons[0]['url']);
+			} else {
+				delete_post_meta($post_id, 'war_buttons');
+				// Se não há botões, usar destination como war_redirect_url
+				if ($destination !== '') {
+					update_post_meta($post_id, self::meta_key_redirect_url(), $destination);
+				}
+			}
+		}
+
+		// Atualizar listas: só se campo foi enviado
+		if ($has_lists) {
+			if (!empty($list_ids)) {
+				wp_set_object_terms($post_id, $list_ids, 'war_list');
+				WAR_Debug::log('AJAX Links: Listas atualizadas', ['post_id' => $post_id, 'list_ids' => $list_ids]);
+			} else {
+				// Array vazio = remover todas as listas
+				wp_set_object_terms($post_id, [], 'war_list');
+				WAR_Debug::log('AJAX Links: Listas removidas', ['post_id' => $post_id]);
+			}
 		}
 
 		WAR_Debug::log('AJAX Links: Atualizado com sucesso', ['post_id' => $post_id]);
