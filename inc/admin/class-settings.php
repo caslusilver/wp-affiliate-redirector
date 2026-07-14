@@ -72,6 +72,15 @@ class WAR_Admin_Settings {
 			'edit.php?post_type=war_link'
 		);
 
+		// Submenu: Listas (taxonomia war_list).
+		add_submenu_page(
+			self::MENU_SLUG,
+			__('Listas', WAR_TEXT_DOMAIN),
+			__('Listas', WAR_TEXT_DOMAIN),
+			'manage_options',
+			'edit-tags.php?taxonomy=war_list&post_type=war_link'
+		);
+
 		// Submenu: Styles (esta página).
 		add_submenu_page(
 			self::MENU_SLUG,

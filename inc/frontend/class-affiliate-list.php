@@ -192,14 +192,14 @@ class WAR_Affiliate_List {
 					<p class="war-list-empty"><?php esc_html_e('Nenhum link nesta lista ainda.', WAR_TEXT_DOMAIN); ?></p>
 				<?php else: ?>
 					<?php foreach ($links as $link): ?>
-						<div class="war-list-item" data-link-id="<?php echo esc_attr($link['id']); ?>">
-							<?php if ($link['image_url']): ?>
+						<?php 
+						$has_image = !empty($link['image_url']);
+						$item_class = $has_image ? 'war-list-item' : 'war-list-item war-list-item--no-image';
+						?>
+						<div class="<?php echo esc_attr($item_class); ?>" data-link-id="<?php echo esc_attr($link['id']); ?>">
+							<?php if ($has_image): ?>
 								<div class="war-list-item__image" data-war-image-zoom="1">
 									<img src="<?php echo esc_url($link['image_url']); ?>" alt="<?php echo esc_attr($link['title']); ?>" />
-								</div>
-							<?php else: ?>
-								<div class="war-list-item__image war-list-item__image--placeholder">
-									<span class="dashicons dashicons-format-image"></span>
 								</div>
 							<?php endif; ?>
 

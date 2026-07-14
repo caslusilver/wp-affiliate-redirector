@@ -482,6 +482,20 @@
 }
 
 /* ============================================================================
+   ITENS SEM IMAGEM
+   ============================================================================ */
+
+/* Lista: item sem imagem não exibe espaço */
+.war-affiliate-list[data-war-view="list"] .war-list-item--no-image .war-list-item__content {
+	margin-left: 0;
+}
+
+/* Card: item sem imagem mantém layout mas oculta bloco de imagem */
+.war-affiliate-list[data-war-view="card"] .war-list-item--no-image .war-list-item__image {
+	display: none;
+}
+
+/* ============================================================================
    RESPONSIVO
    ============================================================================ */
 

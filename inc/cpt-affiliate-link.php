@@ -82,4 +82,44 @@ function war_register_affiliate_list_taxonomy() {
 
 add_action('init', 'war_register_affiliate_list_taxonomy');
 
+// ============================================================================
+// COLUNA DE SHORTCODE NA TELA DE LISTAS
+// ============================================================================
 
+/**
+ * Adiciona coluna Shortcode na listagem de Listas (war_list).
+ */
+function war_add_list_shortcode_column($columns) {
+	$new_columns = [];
+	foreach ($columns as $key => $value) {
+		$new_columns[$key] = $value;
+		// Insere a coluna Shortcode logo após o nome
+		if ($key === 'name') {
+			$new_columns['war_shortcode'] = __('Shortcode', WAR_TEXT_DOMAIN);
+		}
+	}
+	return $new_columns;
+}
+add_filter('manage_edit-war_list_columns', 'war_add_list_shortcode_column');
+
+/**
+ * Renderiza o conteúdo da coluna Shortcode.
+ */
+function war_render_list_shortcode_column($content, $column_name, $term_id) {
+	if ($column_name !== 'war_shortcode') {
+		return $content;
+	}
+
+	$term = get_term($term_id, 'war_list');
+	if (is_wp_error($term) || !$term) {
+		return $content;
+	}
+
+	$shortcode = '[war_affiliate_list slug="' . esc_attr($term->slug) . '"]';
+	
+	return sprintf(
+		'<code style="background:#f0f0f1;padding:4px 8px;border-radius:3px;font-size:12px;user-select:all;cursor:text;">%s</code>',
+		esc_html($shortcode)
+	);
+}
+add_filter('manage_war_list_custom_column', 'war_render_list_shortcode_column', 10, 3);

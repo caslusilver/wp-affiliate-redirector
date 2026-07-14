@@ -27,6 +27,17 @@ function war_add_redirect_url_metabox() {
 }
 add_action('add_meta_boxes', 'war_add_redirect_url_metabox');
 
+/**
+ * Enfileira wp.media para o metabox de imagem funcionar.
+ */
+function war_enqueue_media_uploader() {
+	$screen = get_current_screen();
+	if ($screen && $screen->post_type === 'war_link' && in_array($screen->base, ['post', 'post-new'])) {
+		wp_enqueue_media();
+	}
+}
+add_action('admin_enqueue_scripts', 'war_enqueue_media_uploader');
+
 function war_render_redirect_url_metabox($post) {
 	$value = (string) get_post_meta($post->ID, WAR_META_REDIRECT_URL, true);
 

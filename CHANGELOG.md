@@ -3,9 +3,35 @@
 ## [Unreleased]
 
 ### Changed
-- **Versão atual**: v0.5.0  
+- **Versão atual**: v0.5.1  
   **Versão sugerida após a mudança**: vX.Y.Z  
   **Descrição**: texto objetivo do que mudou e impacto (pode listar itens separados por ponto e vírgula).
+
+## 0.5.1 - 2026-01-14
+
+#### Protocol: a091a73
+
+### Breaking
+- N/A
+
+### Removed
+- N/A
+
+### Added
+- Submenu "Listas" no painel admin (Affiliate Links > Listas) apontando para taxonomia war_list
+- Coluna "Shortcode" na tela de Listas do admin exibindo `[war_affiliate_list slug="..."]` copiável
+- Enfileiramento automático de `wp_enqueue_media()` no admin para metabox de imagem funcionar
+- CSS para itens sem imagem (`.war-list-item--no-image`) que oculta placeholder e ajusta layout
+
+### Changed
+- Metabox de imagem agora abre Media Library corretamente ao clicar em "Selecionar Imagem"
+- Links sem imagem não exibem mais placeholder vazio; layout se ajusta automaticamente
+
+### Fixed
+- Biblioteca de mídia do WordPress não abria no metabox de imagem (faltava wp_enqueue_media)
+- Submenu "Listas" não aparecia no menu Affiliate Links
+- Shortcode das listas não era exibido na interface admin
+- Placeholders vazios apareciam para links sem imagem configurada
 
 ## 0.5.0 - 2026-01-14
 
