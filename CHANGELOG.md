@@ -3,9 +3,38 @@
 ## [Unreleased]
 
 ### Changed
-- **Versão atual**: v0.4.7  
+- **Versão atual**: v0.5.0  
   **Versão sugerida após a mudança**: vX.Y.Z  
   **Descrição**: texto objetivo do que mudou e impacto (pode listar itens separados por ponto e vírgula).
+
+## 0.5.0 - 2026-01-14
+
+#### Protocol: 3ae1582
+
+### Breaking
+- N/A
+
+### Removed
+- N/A
+
+### Added
+- Taxonomia `war_list` para agrupar links de afiliados em listas personalizadas
+- Campo de imagem global por link integrado com Media Library do WordPress (metabox na sidebar)
+- Shortcode `[war_affiliate_list slug="lista-slug"]` para exibir listas em páginas/posts
+- Visualizações alternáveis: lista (foto pequena à esquerda) e cards (grid com fotos grandes)
+- Modal de zoom de imagem com overlay escurecido (fechar com ESC ou clique)
+- Modo admin embutido: drag-drop reordenação, botões editar/deletar direto na lista pública
+- Endpoints AJAX: `war_links_save_order`, `war_get_lists`, `war_list_get_links`
+- Assets completos: `affiliate-list.css` e `affiliate-list.js` com responsividade total
+
+### Changed
+- Endpoints CRUD AJAX (`war_links_list`, `war_links_create`, `war_links_update`) agora suportam `image_url` e associação com listas (taxonomia `war_list`)
+- Links podem ser associados a múltiplas listas via checkboxes no admin
+- Preferência de visualização (lista/card) salva no localStorage do navegador
+- Visitantes veem apenas botões "Acessar" e "Copiar"; admins veem controles completos
+
+### Fixed
+- N/A
 
 ## 0.4.7 - 2026-01-13
 

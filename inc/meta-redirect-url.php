@@ -4,6 +4,7 @@ if (!defined('ABSPATH')) {
 }
 
 const WAR_META_REDIRECT_URL = 'war_redirect_url';
+const WAR_META_IMAGE_URL = 'war_image_url';
 
 function war_add_redirect_url_metabox() {
 	add_meta_box(
@@ -13,6 +14,15 @@ function war_add_redirect_url_metabox() {
 		'war_link',
 		'normal',
 		'high'
+	);
+
+	add_meta_box(
+		'war_image_url',
+		'Imagem do Produto',
+		'war_render_image_url_metabox',
+		'war_link',
+		'side',
+		'default'
 	);
 }
 add_action('add_meta_boxes', 'war_add_redirect_url_metabox');
@@ -74,6 +84,122 @@ function war_save_redirect_url_meta($post_id) {
 	update_post_meta($post_id, WAR_META_REDIRECT_URL, $url);
 }
 add_action('save_post', 'war_save_redirect_url_meta');
+
+// ============================================================================
+// METABOX DE IMAGEM DO PRODUTO
+// ============================================================================
+
+function war_render_image_url_metabox($post) {
+	$image_url = (string) get_post_meta($post->ID, WAR_META_IMAGE_URL, true);
+	wp_nonce_field('war_save_image_url', 'war_image_url_nonce');
+	?>
+	<div class="war-image-upload-wrap">
+		<div class="war-image-preview" style="margin-bottom:10px;">
+			<?php if ($image_url): ?>
+				<img src="<?php echo esc_url($image_url); ?>" alt="Preview" style="max-width:100%;height:auto;border:1px solid #ddd;border-radius:4px;" />
+			<?php else: ?>
+				<div style="background:#f0f0f1;border:1px dashed #c3c4c7;border-radius:4px;padding:40px 20px;text-align:center;color:#50575e;">
+					<span class="dashicons dashicons-format-image" style="font-size:48px;width:48px;height:48px;"></span>
+					<p style="margin:10px 0 0;">Nenhuma imagem selecionada</p>
+				</div>
+			<?php endif; ?>
+		</div>
+
+		<input
+			type="hidden"
+			id="war_image_url_field"
+			name="war_image_url_field"
+			value="<?php echo esc_attr($image_url); ?>"
+		/>
+
+		<button type="button" class="button button-secondary" id="war_upload_image_button" style="width:100%;margin-bottom:6px;">
+			<?php _e('Selecionar Imagem', WAR_TEXT_DOMAIN); ?>
+		</button>
+
+		<button type="button" class="button button-link-delete" id="war_remove_image_button" style="width:100%;color:#b32d2e;" <?php echo $image_url ? '' : 'disabled'; ?>>
+			<?php _e('Remover Imagem', WAR_TEXT_DOMAIN); ?>
+		</button>
+
+		<p class="description" style="margin-top:10px;">
+			<?php _e('Imagem do produto que aparecerá nas listas e cards.', WAR_TEXT_DOMAIN); ?>
+		</p>
+	</div>
+
+	<script>
+	jQuery(document).ready(function($) {
+		var mediaUploader;
+
+		$('#war_upload_image_button').on('click', function(e) {
+			e.preventDefault();
+
+			if (mediaUploader) {
+				mediaUploader.open();
+				return;
+			}
+
+			mediaUploader = wp.media({
+				title: '<?php _e('Selecionar Imagem do Produto', WAR_TEXT_DOMAIN); ?>',
+				button: {
+					text: '<?php _e('Usar esta imagem', WAR_TEXT_DOMAIN); ?>'
+				},
+				multiple: false
+			});
+
+			mediaUploader.on('select', function() {
+				var attachment = mediaUploader.state().get('selection').first().toJSON();
+				$('#war_image_url_field').val(attachment.url);
+				$('.war-image-preview').html('<img src="' + attachment.url + '" alt="Preview" style="max-width:100%;height:auto;border:1px solid #ddd;border-radius:4px;" />');
+				$('#war_remove_image_button').prop('disabled', false);
+			});
+
+			mediaUploader.open();
+		});
+
+		$('#war_remove_image_button').on('click', function(e) {
+			e.preventDefault();
+			$('#war_image_url_field').val('');
+			$('.war-image-preview').html('<div style="background:#f0f0f1;border:1px dashed #c3c4c7;border-radius:4px;padding:40px 20px;text-align:center;color:#50575e;"><span class="dashicons dashicons-format-image" style="font-size:48px;width:48px;height:48px;"></span><p style="margin:10px 0 0;">Nenhuma imagem selecionada</p></div>');
+			$(this).prop('disabled', true);
+		});
+	});
+	</script>
+	<?php
+}
+
+function war_save_image_url_meta($post_id) {
+	if (get_post_type($post_id) !== 'war_link') {
+		return;
+	}
+
+	if (!isset($_POST['war_image_url_nonce']) || !wp_verify_nonce($_POST['war_image_url_nonce'], 'war_save_image_url')) {
+		return;
+	}
+
+	if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+		return;
+	}
+
+	if (!current_user_can('edit_post', $post_id)) {
+		return;
+	}
+
+	$raw = isset($_POST['war_image_url_field']) ? (string) wp_unslash($_POST['war_image_url_field']) : '';
+	$raw = trim($raw);
+
+	if ($raw === '') {
+		delete_post_meta($post_id, WAR_META_IMAGE_URL);
+		return;
+	}
+
+	$url = esc_url_raw($raw, ['http', 'https']);
+
+	if ($url === '' || !preg_match('#^https?://#i', $url)) {
+		return;
+	}
+
+	update_post_meta($post_id, WAR_META_IMAGE_URL, $url);
+}
+add_action('save_post', 'war_save_image_url_meta');
 
 // ============================================================================
 // METABOX DE KEYWORDS (Chat IG)

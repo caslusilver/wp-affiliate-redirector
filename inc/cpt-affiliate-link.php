@@ -43,4 +43,43 @@ function war_register_affiliate_link_cpt() {
 
 add_action('init', 'war_register_affiliate_link_cpt');
 
+/**
+ * Taxonomia: Listas de Afiliados
+ * Permite agrupar links em listas/categorias para exibição via shortcode.
+ */
+function war_register_affiliate_list_taxonomy() {
+	$labels = [
+		'name' => 'Listas',
+		'singular_name' => 'Lista',
+		'menu_name' => 'Listas',
+		'all_items' => 'Todas as Listas',
+		'edit_item' => 'Editar Lista',
+		'view_item' => 'Ver Lista',
+		'update_item' => 'Atualizar Lista',
+		'add_new_item' => 'Adicionar Nova Lista',
+		'new_item_name' => 'Novo Nome de Lista',
+		'search_items' => 'Buscar Listas',
+		'popular_items' => 'Listas Populares',
+		'not_found' => 'Nenhuma lista encontrada',
+	];
+
+	register_taxonomy('war_list', ['war_link'], [
+		'labels' => $labels,
+		'public' => true,
+		'publicly_queryable' => true,
+		'show_ui' => true,
+		'show_in_menu' => true,
+		'show_in_nav_menus' => true,
+		'show_admin_column' => true,
+		'hierarchical' => true,
+		'rewrite' => [
+			'slug' => 'lista-afiliado',
+			'with_front' => false,
+		],
+		'show_in_rest' => true,
+	]);
+}
+
+add_action('init', 'war_register_affiliate_list_taxonomy');
+
 

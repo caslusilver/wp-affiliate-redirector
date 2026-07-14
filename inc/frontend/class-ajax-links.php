@@ -19,6 +19,8 @@ class WAR_Ajax_Links {
 		add_action('wp_ajax_war_links_create', [__CLASS__, 'create_link']);
 		add_action('wp_ajax_war_links_update', [__CLASS__, 'update_link']);
 		add_action('wp_ajax_war_links_delete', [__CLASS__, 'delete_link']);
+		add_action('wp_ajax_war_links_save_order', [__CLASS__, 'save_order']);
+		add_action('wp_ajax_war_get_lists', [__CLASS__, 'get_lists']);
 	}
 
 	private static function guard() {
@@ -78,14 +80,30 @@ class WAR_Ajax_Links {
 
 		foreach ($q->posts as $p) {
 			$post_id = (int) $p->ID;
+			
+			// Obter listas (taxonomia war_list)
+			$lists = wp_get_post_terms($post_id, 'war_list', ['fields' => 'all']);
+			$list_names = [];
+			$list_ids = [];
+			if (!is_wp_error($lists) && !empty($lists)) {
+				foreach ($lists as $term) {
+					$list_names[] = $term->name;
+					$list_ids[] = $term->term_id;
+				}
+			}
+			
 			$items[] = [
 				'id' => $post_id,
 				'title' => get_the_title($post_id),
 				'slug' => (string) $p->post_name,
 				'public_url' => get_permalink($post_id),
 				'destination' => (string) get_post_meta($post_id, $meta_key, true),
+				'image_url' => (string) get_post_meta($post_id, 'war_image_url', true),
 				'clicks_total' => (int) get_post_meta($post_id, 'war_clicks_total', true),
 				'keywords' => (string) get_post_meta($post_id, 'war_keywords', true),
+				'lists' => $list_names,
+				'list_ids' => $list_ids,
+				'menu_order' => (int) $p->menu_order,
 			];
 		}
 
@@ -110,12 +128,16 @@ class WAR_Ajax_Links {
 		$slug = isset($_POST['slug']) ? sanitize_title((string) wp_unslash($_POST['slug'])) : '';
 		$destination = isset($_POST['destination']) ? self::sanitize_destination(wp_unslash($_POST['destination'])) : '';
 		$keywords = isset($_POST['keywords']) ? sanitize_textarea_field((string) wp_unslash($_POST['keywords'])) : '';
+		$image_url = isset($_POST['image_url']) ? self::sanitize_destination(wp_unslash($_POST['image_url'])) : '';
+		$list_ids = isset($_POST['list_ids']) ? array_map('absint', (array) $_POST['list_ids']) : [];
 
 		WAR_Debug::log('AJAX Links: Criando', [
 			'title' => $title,
 			'slug' => $slug,
 			'destination' => $destination,
 			'keywords' => $keywords,
+			'image_url' => $image_url,
+			'list_ids' => $list_ids,
 		]);
 
 		if ($title === '') {
@@ -145,9 +167,19 @@ class WAR_Ajax_Links {
 
 		update_post_meta($post_id, self::meta_key_redirect_url(), $destination);
 
+		if ($image_url !== '') {
+			update_post_meta($post_id, 'war_image_url', $image_url);
+		}
+
 		if ($keywords !== '') {
 			update_post_meta($post_id, 'war_keywords', trim($keywords));
 			WAR_Debug::log('AJAX Links: Keywords salvas', ['post_id' => $post_id, 'keywords' => $keywords]);
+		}
+
+		// Associar listas (taxonomia)
+		if (!empty($list_ids)) {
+			wp_set_object_terms($post_id, $list_ids, 'war_list');
+			WAR_Debug::log('AJAX Links: Listas associadas', ['post_id' => $post_id, 'list_ids' => $list_ids]);
 		}
 
 		WAR_Debug::log('AJAX Links: Criado com sucesso', ['post_id' => $post_id]);
@@ -172,12 +204,16 @@ class WAR_Ajax_Links {
 		$title = isset($_POST['title']) ? sanitize_text_field((string) wp_unslash($_POST['title'])) : '';
 		$destination = isset($_POST['destination']) ? self::sanitize_destination(wp_unslash($_POST['destination'])) : '';
 		$keywords = isset($_POST['keywords']) ? sanitize_textarea_field((string) wp_unslash($_POST['keywords'])) : '';
+		$image_url = isset($_POST['image_url']) ? self::sanitize_destination(wp_unslash($_POST['image_url'])) : '';
+		$list_ids = isset($_POST['list_ids']) ? array_map('absint', (array) $_POST['list_ids']) : [];
 
 		WAR_Debug::log('AJAX Links: Atualizando', [
 			'post_id' => $post_id,
 			'title' => $title,
 			'destination' => $destination,
 			'keywords' => $keywords,
+			'image_url' => $image_url,
+			'list_ids' => $list_ids,
 		]);
 
 		if ($title === '') {
@@ -200,12 +236,29 @@ class WAR_Ajax_Links {
 
 		update_post_meta($post_id, self::meta_key_redirect_url(), $destination);
 
+		// Atualizar ou remover imagem
+		if ($image_url !== '') {
+			update_post_meta($post_id, 'war_image_url', $image_url);
+		} else {
+			delete_post_meta($post_id, 'war_image_url');
+		}
+
 		if ($keywords !== '') {
 			update_post_meta($post_id, 'war_keywords', trim($keywords));
 			WAR_Debug::log('AJAX Links: Keywords atualizadas', ['post_id' => $post_id, 'keywords' => $keywords]);
 		} else {
 			delete_post_meta($post_id, 'war_keywords');
 			WAR_Debug::log('AJAX Links: Keywords removidas', ['post_id' => $post_id]);
+		}
+
+		// Atualizar listas (taxonomia)
+		if (!empty($list_ids)) {
+			wp_set_object_terms($post_id, $list_ids, 'war_list');
+			WAR_Debug::log('AJAX Links: Listas atualizadas', ['post_id' => $post_id, 'list_ids' => $list_ids]);
+		} else {
+			// Remove todas as listas se array vazio
+			wp_set_object_terms($post_id, [], 'war_list');
+			WAR_Debug::log('AJAX Links: Listas removidas', ['post_id' => $post_id]);
 		}
 
 		WAR_Debug::log('AJAX Links: Atualizado com sucesso', ['post_id' => $post_id]);
@@ -231,6 +284,73 @@ class WAR_Ajax_Links {
 		}
 
 		wp_send_json_success(['id' => $post_id]);
+	}
+
+	/**
+	 * Salvar ordem dos links (drag and drop).
+	 */
+	public static function save_order() {
+		self::guard();
+
+		$order = isset($_POST['order']) ? $_POST['order'] : [];
+		if (!is_array($order) || empty($order)) {
+			wp_send_json_error(['message' => 'Ordem inválida.'], 400);
+		}
+
+		$updated = 0;
+		foreach ($order as $index => $post_id) {
+			$post_id = absint($post_id);
+			if (!$post_id || get_post_type($post_id) !== 'war_link') {
+				continue;
+			}
+
+			wp_update_post([
+				'ID' => $post_id,
+				'menu_order' => $index,
+			]);
+			$updated++;
+		}
+
+		WAR_Debug::log('AJAX Links: Ordem salva', ['updated' => $updated, 'total' => count($order)]);
+
+		wp_send_json_success([
+			'updated' => $updated,
+			'message' => sprintf('%d link(s) reordenado(s).', $updated),
+		]);
+	}
+
+	/**
+	 * Obter todas as listas (taxonomia war_list).
+	 */
+	public static function get_lists() {
+		self::guard();
+
+		$terms = get_terms([
+			'taxonomy' => 'war_list',
+			'hide_empty' => false,
+			'orderby' => 'name',
+			'order' => 'ASC',
+		]);
+
+		if (is_wp_error($terms)) {
+			wp_send_json_error(['message' => 'Erro ao buscar listas.'], 500);
+		}
+
+		$lists = [];
+		foreach ($terms as $term) {
+			$lists[] = [
+				'id' => (int) $term->term_id,
+				'name' => $term->name,
+				'slug' => $term->slug,
+				'count' => (int) $term->count,
+			];
+		}
+
+		WAR_Debug::log('AJAX Links: Listas obtidas', ['count' => count($lists)]);
+
+		wp_send_json_success([
+			'lists' => $lists,
+		]);
 	}
 }
 
