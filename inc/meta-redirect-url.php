@@ -5,6 +5,8 @@ if (!defined('ABSPATH')) {
 
 const WAR_META_REDIRECT_URL = 'war_redirect_url';
 const WAR_META_IMAGE_URL = 'war_image_url';
+const WAR_META_DESCRIPTION = 'war_description';
+const WAR_META_BUTTONS = 'war_buttons';
 
 function war_add_redirect_url_metabox() {
 	add_meta_box(
@@ -227,6 +229,24 @@ function war_add_keywords_metabox() {
 		'normal',
 		'default'
 	);
+
+	add_meta_box(
+		'war_description',
+		__('Descrição do Produto', WAR_TEXT_DOMAIN),
+		'war_render_description_metabox',
+		'war_link',
+		'normal',
+		'default'
+	);
+
+	add_meta_box(
+		'war_buttons',
+		__('Botões de Destino', WAR_TEXT_DOMAIN),
+		'war_render_buttons_metabox',
+		'war_link',
+		'normal',
+		'default'
+	);
 }
 add_action('add_meta_boxes', 'war_add_keywords_metabox');
 
@@ -289,6 +309,233 @@ function war_save_keywords_meta($post_id) {
 	WAR_Debug::log('Keywords: Salvo', ['post_id' => $post_id, 'keywords' => $raw]);
 }
 add_action('save_post', 'war_save_keywords_meta');
+
+// ============================================================================
+// METABOX DE DESCRIÇÃO DO PRODUTO
+// ============================================================================
+
+function war_render_description_metabox($post) {
+	$description = (string) get_post_meta($post->ID, WAR_META_DESCRIPTION, true);
+	wp_nonce_field('war_description_save', 'war_description_nonce');
+	?>
+	<p>
+		<label for="war_description_field" style="display:block;margin-bottom:6px;">
+			<?php _e('Descrição curta do produto:', WAR_TEXT_DOMAIN); ?>
+		</label>
+	</p>
+	<textarea
+		id="war_description_field"
+		name="war_description_field"
+		rows="4"
+		class="large-text"
+		placeholder="Digite uma breve descrição do produto..."
+		style="width:100%;max-width:720px;"
+	><?php echo esc_textarea($description); ?></textarea>
+	<p class="description">
+		<?php _e('Esta descrição aparecerá nas listas/cards. Se longa, será exibido "Ver mais".', WAR_TEXT_DOMAIN); ?>
+	</p>
+	<?php
+}
+
+function war_save_description_meta($post_id) {
+	if (get_post_type($post_id) !== 'war_link') {
+		return;
+	}
+
+	if (!isset($_POST['war_description_nonce']) || !wp_verify_nonce($_POST['war_description_nonce'], 'war_description_save')) {
+		return;
+	}
+
+	if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+		return;
+	}
+
+	if (!current_user_can('edit_post', $post_id)) {
+		return;
+	}
+
+	$raw = isset($_POST['war_description_field']) ? sanitize_textarea_field((string) wp_unslash($_POST['war_description_field'])) : '';
+	$raw = trim($raw);
+
+	if ($raw === '') {
+		delete_post_meta($post_id, WAR_META_DESCRIPTION);
+		return;
+	}
+
+	update_post_meta($post_id, WAR_META_DESCRIPTION, $raw);
+}
+add_action('save_post', 'war_save_description_meta');
+
+// ============================================================================
+// METABOX DE BOTÕES DE DESTINO
+// ============================================================================
+
+function war_render_buttons_metabox($post) {
+	$buttons = get_post_meta($post->ID, WAR_META_BUTTONS, true);
+	if (!is_array($buttons)) {
+		$buttons = [];
+	}
+
+	wp_nonce_field('war_buttons_save', 'war_buttons_nonce');
+	?>
+	<div class="war-buttons-editor">
+		<p class="description" style="margin-bottom:12px;">
+			<?php _e('Configure múltiplos botões de destino para este produto. Se nenhum botão for configurado, será usado o campo "URL de redirecionamento" principal.', WAR_TEXT_DOMAIN); ?>
+		</p>
+
+		<div id="war-buttons-list" style="margin-bottom:12px;">
+			<?php if (empty($buttons)): ?>
+				<p class="war-no-buttons" style="color:#50575e;font-style:italic;padding:12px;background:#f6f7f7;border-radius:4px;">
+					<?php _e('Nenhum botão configurado. Clique em "Adicionar Botão" para criar o primeiro.', WAR_TEXT_DOMAIN); ?>
+				</p>
+			<?php else: ?>
+				<?php foreach ($buttons as $index => $button): ?>
+					<div class="war-button-item" style="background:#f6f7f7;padding:12px;margin-bottom:8px;border-radius:4px;border-left:3px solid #2271b1;">
+						<div style="margin-bottom:8px;">
+							<label style="display:block;font-weight:600;margin-bottom:4px;">
+								<?php _e('Label do Botão:', WAR_TEXT_DOMAIN); ?>
+							</label>
+							<input
+								type="text"
+								name="war_buttons[<?php echo $index; ?>][label]"
+								value="<?php echo esc_attr($button['label'] ?? ''); ?>"
+								placeholder="Ex: Comprar na Amazon"
+								class="regular-text"
+								style="width:100%;"
+							/>
+						</div>
+						<div style="margin-bottom:8px;">
+							<label style="display:block;font-weight:600;margin-bottom:4px;">
+								<?php _e('URL de Destino:', WAR_TEXT_DOMAIN); ?>
+							</label>
+							<input
+								type="url"
+								name="war_buttons[<?php echo $index; ?>][url]"
+								value="<?php echo esc_attr($button['url'] ?? ''); ?>"
+								placeholder="https://exemplo.com/produto"
+								class="regular-text"
+								style="width:100%;"
+							/>
+						</div>
+						<button type="button" class="button button-link-delete war-remove-button" style="color:#b32d2e;">
+							<?php _e('Remover Botão', WAR_TEXT_DOMAIN); ?>
+						</button>
+					</div>
+				<?php endforeach; ?>
+			<?php endif; ?>
+		</div>
+
+		<button type="button" id="war-add-button" class="button button-secondary">
+			<?php _e('+ Adicionar Botão', WAR_TEXT_DOMAIN); ?>
+		</button>
+	</div>
+
+	<script>
+	jQuery(document).ready(function($) {
+		var buttonIndex = <?php echo count($buttons); ?>;
+
+		$('#war-add-button').on('click', function() {
+			$('.war-no-buttons').remove();
+
+			var template = `
+				<div class="war-button-item" style="background:#f6f7f7;padding:12px;margin-bottom:8px;border-radius:4px;border-left:3px solid #2271b1;">
+					<div style="margin-bottom:8px;">
+						<label style="display:block;font-weight:600;margin-bottom:4px;">
+							<?php _e('Label do Botão:', WAR_TEXT_DOMAIN); ?>
+						</label>
+						<input
+							type="text"
+							name="war_buttons[${buttonIndex}][label]"
+							placeholder="Ex: Comprar na Amazon"
+							class="regular-text"
+							style="width:100%;"
+						/>
+					</div>
+					<div style="margin-bottom:8px;">
+						<label style="display:block;font-weight:600;margin-bottom:4px;">
+							<?php _e('URL de Destino:', WAR_TEXT_DOMAIN); ?>
+						</label>
+						<input
+							type="url"
+							name="war_buttons[${buttonIndex}][url]"
+							placeholder="https://exemplo.com/produto"
+							class="regular-text"
+							style="width:100%;"
+						/>
+					</div>
+					<button type="button" class="button button-link-delete war-remove-button" style="color:#b32d2e;">
+						<?php _e('Remover Botão', WAR_TEXT_DOMAIN); ?>
+					</button>
+				</div>
+			`;
+
+			$('#war-buttons-list').append(template);
+			buttonIndex++;
+		});
+
+		$(document).on('click', '.war-remove-button', function() {
+			$(this).closest('.war-button-item').remove();
+
+			if ($('.war-button-item').length === 0) {
+				$('#war-buttons-list').html('<p class="war-no-buttons" style="color:#50575e;font-style:italic;padding:12px;background:#f6f7f7;border-radius:4px;"><?php _e('Nenhum botão configurado. Clique em "Adicionar Botão" para criar o primeiro.', WAR_TEXT_DOMAIN); ?></p>');
+			}
+		});
+	});
+	</script>
+	<?php
+}
+
+function war_save_buttons_meta($post_id) {
+	if (get_post_type($post_id) !== 'war_link') {
+		return;
+	}
+
+	if (!isset($_POST['war_buttons_nonce']) || !wp_verify_nonce($_POST['war_buttons_nonce'], 'war_buttons_save')) {
+		return;
+	}
+
+	if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+		return;
+	}
+
+	if (!current_user_can('edit_post', $post_id)) {
+		return;
+	}
+
+	$buttons_raw = isset($_POST['war_buttons']) ? (array) wp_unslash($_POST['war_buttons']) : [];
+	$buttons_clean = [];
+
+	foreach ($buttons_raw as $button) {
+		if (!is_array($button)) {
+			continue;
+		}
+
+		$label = isset($button['label']) ? sanitize_text_field((string) $button['label']) : '';
+		$url = isset($button['url']) ? esc_url_raw((string) $button['url'], ['http', 'https']) : '';
+
+		// Valida que ambos existem e URL é válida
+		if ($label !== '' && $url !== '' && preg_match('#^https?://#i', $url)) {
+			$buttons_clean[] = [
+				'label' => $label,
+				'url' => $url,
+			];
+		}
+	}
+
+	// Se não há botões válidos, remove o meta
+	if (empty($buttons_clean)) {
+		delete_post_meta($post_id, WAR_META_BUTTONS);
+		return;
+	}
+
+	// Atualiza war_buttons
+	update_post_meta($post_id, WAR_META_BUTTONS, $buttons_clean);
+
+	// Mantém war_redirect_url sempre como a primeira URL válida
+	$first_url = $buttons_clean[0]['url'];
+	update_post_meta($post_id, WAR_META_REDIRECT_URL, $first_url);
+}
+add_action('save_post', 'war_save_buttons_meta');
 
 // ============================================================================
 // FUNÇÃO DE BUSCA POR KEYWORD
