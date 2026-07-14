@@ -496,6 +496,251 @@
 }
 
 /* ============================================================================
+   MODAL DE EDIÇÃO INLINE
+   ============================================================================ */
+
+.war-edit-modal {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	z-index: 999999;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 20px;
+}
+
+.war-edit-modal__overlay {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: rgba(0, 0, 0, 0.7);
+	cursor: pointer;
+}
+
+.war-edit-modal__content {
+	position: relative;
+	background: #fff;
+	border-radius: 12px;
+	width: 100%;
+	max-width: 600px;
+	max-height: 90vh;
+	display: flex;
+	flex-direction: column;
+	box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+	z-index: 1;
+}
+
+.war-edit-modal__header {
+	padding: 20px 24px;
+	border-bottom: 1px solid #e5e7eb;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.war-edit-modal__title {
+	margin: 0;
+	font-size: 20px;
+	font-weight: 600;
+	color: #1f2937;
+}
+
+.war-edit-modal__close {
+	appearance: none;
+	background: transparent;
+	border: none;
+	cursor: pointer;
+	padding: 4px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 4px;
+	transition: background 0.2s ease;
+}
+
+.war-edit-modal__close:hover {
+	background: #f3f4f6;
+}
+
+.war-edit-modal__close .dashicons {
+	font-size: 24px;
+	width: 24px;
+	height: 24px;
+	color: #6b7280;
+}
+
+.war-edit-modal__body {
+	padding: 24px;
+	overflow-y: auto;
+	flex: 1;
+}
+
+.war-edit-modal__footer {
+	padding: 16px 24px;
+	border-top: 1px solid #e5e7eb;
+	display: flex;
+	gap: 12px;
+	justify-content: flex-end;
+}
+
+.war-edit-field {
+	margin-bottom: 20px;
+}
+
+.war-edit-field__label {
+	display: block;
+	margin-bottom: 8px;
+	font-size: 14px;
+	font-weight: 600;
+	color: #374151;
+}
+
+.war-edit-field__input,
+.war-edit-field__textarea {
+	width: 100%;
+	padding: 10px 12px;
+	border: 1px solid #d1d5db;
+	border-radius: 6px;
+	font-size: 14px;
+	color: #1f2937;
+	font-family: inherit;
+	transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.war-edit-field__input:focus,
+.war-edit-field__textarea:focus {
+	outline: none;
+	border-color: #2563eb;
+	box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.war-edit-image-upload {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.war-edit-image-preview {
+	display: none;
+	width: 100%;
+	max-width: 200px;
+	border-radius: 8px;
+	overflow: hidden;
+	background: #f3f4f6;
+}
+
+.war-edit-image-preview img {
+	width: 100%;
+	height: auto;
+	display: block;
+}
+
+.war-edit-lists-checkboxes {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.war-edit-list-checkbox {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 8px;
+	border-radius: 6px;
+	cursor: pointer;
+	transition: background 0.2s ease;
+}
+
+.war-edit-list-checkbox:hover {
+	background: #f3f4f6;
+}
+
+.war-edit-list-checkbox input[type="checkbox"] {
+	margin: 0;
+	cursor: pointer;
+}
+
+.war-edit-list-checkbox span {
+	font-size: 14px;
+	color: #374151;
+}
+
+.war-edit-lists-loading {
+	color: #6b7280;
+	font-size: 14px;
+	margin: 0;
+}
+
+.war-edit-buttons-editor {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.war-edit-buttons-list {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.war-edit-button-row {
+	display: grid;
+	grid-template-columns: 1fr 2fr auto;
+	gap: 8px;
+	align-items: center;
+}
+
+.war-edit-button-label,
+.war-edit-button-url {
+	padding: 8px 12px;
+	border: 1px solid #d1d5db;
+	border-radius: 6px;
+	font-size: 14px;
+	color: #1f2937;
+	transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.war-edit-button-label:focus,
+.war-edit-button-url:focus {
+	outline: none;
+	border-color: #2563eb;
+	box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.war-btn--secondary {
+	background: #f3f4f6;
+	border-color: #e5e7eb;
+	color: #374151;
+}
+
+.war-btn--secondary:hover {
+	background: #e5e7eb;
+	border-color: #d1d5db;
+}
+
+.war-btn--danger {
+	padding: 8px;
+	min-width: auto;
+}
+
+.war-btn--danger:hover {
+	background: #fee2e2;
+	border-color: #fecaca;
+}
+
+.war-btn--danger .dashicons {
+	font-size: 16px;
+	width: 16px;
+	height: 16px;
+	color: #dc2626;
+}
+
+/* ============================================================================
    RESPONSIVO
    ============================================================================ */
 
@@ -533,5 +778,32 @@
 		border-top: 1px solid #e5e7eb;
 		background: transparent !important;
 		box-shadow: none !important;
+	}
+
+	.war-edit-modal__content {
+		max-width: 100%;
+		max-height: 100vh;
+		border-radius: 0;
+	}
+
+	.war-edit-button-row {
+		grid-template-columns: 1fr;
+	}
+
+	.war-edit-modal__body {
+		padding: 16px;
+	}
+
+	.war-edit-modal__header {
+		padding: 16px;
+	}
+
+	.war-edit-modal__footer {
+		padding: 12px 16px;
+		flex-direction: column-reverse;
+	}
+
+	.war-edit-modal__footer .war-btn {
+		width: 100%;
 	}
 }

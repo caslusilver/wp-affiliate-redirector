@@ -54,6 +54,41 @@ class WAR_Ajax_Links {
 		return $url;
 	}
 
+	private static function sanitize_buttons($raw) {
+		// Se for JSON string, decodificar
+		if (is_string($raw)) {
+			$decoded = json_decode($raw, true);
+			if (is_array($decoded)) {
+				$raw = $decoded;
+			} else {
+				return [];
+			}
+		}
+
+		if (!is_array($raw)) {
+			return [];
+		}
+
+		$buttons_clean = [];
+		foreach ($raw as $button) {
+			if (!is_array($button)) {
+				continue;
+			}
+
+			$label = isset($button['label']) ? sanitize_text_field($button['label']) : '';
+			$url = isset($button['url']) ? esc_url_raw($button['url'], ['http', 'https']) : '';
+
+			if ($label !== '' && $url !== '' && preg_match('#^https?://#i', $url)) {
+				$buttons_clean[] = [
+					'label' => $label,
+					'url' => $url,
+				];
+			}
+		}
+
+		return $buttons_clean;
+	}
+
 	public static function list_links() {
 		self::guard();
 
@@ -92,6 +127,12 @@ class WAR_Ajax_Links {
 				}
 			}
 			
+			// Obter botões
+			$buttons = get_post_meta($post_id, 'war_buttons', true);
+			if (!is_array($buttons)) {
+				$buttons = [];
+			}
+			
 			$items[] = [
 				'id' => $post_id,
 				'title' => get_the_title($post_id),
@@ -99,6 +140,8 @@ class WAR_Ajax_Links {
 				'public_url' => get_permalink($post_id),
 				'destination' => (string) get_post_meta($post_id, $meta_key, true),
 				'image_url' => (string) get_post_meta($post_id, 'war_image_url', true),
+				'description' => (string) get_post_meta($post_id, 'war_description', true),
+				'buttons' => $buttons,
 				'clicks_total' => (int) get_post_meta($post_id, 'war_clicks_total', true),
 				'keywords' => (string) get_post_meta($post_id, 'war_keywords', true),
 				'lists' => $list_names,
@@ -129,7 +172,12 @@ class WAR_Ajax_Links {
 		$destination = isset($_POST['destination']) ? self::sanitize_destination(wp_unslash($_POST['destination'])) : '';
 		$keywords = isset($_POST['keywords']) ? sanitize_textarea_field((string) wp_unslash($_POST['keywords'])) : '';
 		$image_url = isset($_POST['image_url']) ? self::sanitize_destination(wp_unslash($_POST['image_url'])) : '';
+		$description = isset($_POST['description']) ? sanitize_textarea_field((string) wp_unslash($_POST['description'])) : '';
+		$buttons_raw = isset($_POST['buttons']) ? wp_unslash($_POST['buttons']) : '';
 		$list_ids = isset($_POST['list_ids']) ? array_map('absint', (array) $_POST['list_ids']) : [];
+
+		// Sanitizar botões
+		$buttons = self::sanitize_buttons($buttons_raw);
 
 		WAR_Debug::log('AJAX Links: Criando', [
 			'title' => $title,
@@ -137,6 +185,8 @@ class WAR_Ajax_Links {
 			'destination' => $destination,
 			'keywords' => $keywords,
 			'image_url' => $image_url,
+			'description' => $description,
+			'buttons' => $buttons,
 			'list_ids' => $list_ids,
 		]);
 
@@ -176,6 +226,16 @@ class WAR_Ajax_Links {
 			WAR_Debug::log('AJAX Links: Keywords salvas', ['post_id' => $post_id, 'keywords' => $keywords]);
 		}
 
+		if ($description !== '') {
+			update_post_meta($post_id, 'war_description', $description);
+		}
+
+		if (!empty($buttons)) {
+			update_post_meta($post_id, 'war_buttons', $buttons);
+			// Sincronizar war_redirect_url com primeiro botão
+			update_post_meta($post_id, self::meta_key_redirect_url(), $buttons[0]['url']);
+		}
+
 		// Associar listas (taxonomia)
 		if (!empty($list_ids)) {
 			wp_set_object_terms($post_id, $list_ids, 'war_list');
@@ -205,7 +265,12 @@ class WAR_Ajax_Links {
 		$destination = isset($_POST['destination']) ? self::sanitize_destination(wp_unslash($_POST['destination'])) : '';
 		$keywords = isset($_POST['keywords']) ? sanitize_textarea_field((string) wp_unslash($_POST['keywords'])) : '';
 		$image_url = isset($_POST['image_url']) ? self::sanitize_destination(wp_unslash($_POST['image_url'])) : '';
+		$description = isset($_POST['description']) ? sanitize_textarea_field((string) wp_unslash($_POST['description'])) : '';
+		$buttons_raw = isset($_POST['buttons']) ? wp_unslash($_POST['buttons']) : '';
 		$list_ids = isset($_POST['list_ids']) ? array_map('absint', (array) $_POST['list_ids']) : [];
+
+		// Sanitizar botões
+		$buttons = self::sanitize_buttons($buttons_raw);
 
 		WAR_Debug::log('AJAX Links: Atualizando', [
 			'post_id' => $post_id,
@@ -213,6 +278,8 @@ class WAR_Ajax_Links {
 			'destination' => $destination,
 			'keywords' => $keywords,
 			'image_url' => $image_url,
+			'description' => $description,
+			'buttons' => $buttons,
 			'list_ids' => $list_ids,
 		]);
 
@@ -249,6 +316,26 @@ class WAR_Ajax_Links {
 		} else {
 			delete_post_meta($post_id, 'war_keywords');
 			WAR_Debug::log('AJAX Links: Keywords removidas', ['post_id' => $post_id]);
+		}
+
+		// Atualizar descrição
+		if ($description !== '') {
+			update_post_meta($post_id, 'war_description', $description);
+		} else {
+			delete_post_meta($post_id, 'war_description');
+		}
+
+		// Atualizar botões
+		if (!empty($buttons)) {
+			update_post_meta($post_id, 'war_buttons', $buttons);
+			// Sincronizar war_redirect_url com primeiro botão
+			update_post_meta($post_id, self::meta_key_redirect_url(), $buttons[0]['url']);
+		} else {
+			delete_post_meta($post_id, 'war_buttons');
+			// Se não há botões, usar destination como war_redirect_url
+			if ($destination !== '') {
+				update_post_meta($post_id, self::meta_key_redirect_url(), $destination);
+			}
 		}
 
 		// Atualizar listas (taxonomia)
