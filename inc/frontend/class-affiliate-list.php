@@ -138,6 +138,26 @@ class WAR_Affiliate_List {
 		if ($query->have_posts()) {
 			foreach ($query->posts as $p) {
 				$post_id = (int) $p->ID;
+				
+				// Obter botões
+				$buttons = get_post_meta($post_id, 'war_buttons', true);
+				if (!is_array($buttons)) {
+					$buttons = [];
+				}
+				
+				// Se não há botões, usar war_redirect_url como fallback
+				if (empty($buttons)) {
+					$destination = (string) get_post_meta($post_id, 'war_redirect_url', true);
+					if ($destination !== '') {
+						$buttons = [
+							[
+								'label' => __('Acessar', WAR_TEXT_DOMAIN),
+								'url' => $destination,
+							]
+						];
+					}
+				}
+				
 				$links[] = [
 					'id' => $post_id,
 					'title' => get_the_title($post_id),
@@ -145,6 +165,8 @@ class WAR_Affiliate_List {
 					'public_url' => get_permalink($post_id),
 					'destination' => (string) get_post_meta($post_id, 'war_redirect_url', true),
 					'image_url' => (string) get_post_meta($post_id, 'war_image_url', true),
+					'description' => (string) get_post_meta($post_id, 'war_description', true),
+					'buttons' => $buttons,
 					'menu_order' => (int) $p->menu_order,
 				];
 			}
@@ -210,10 +232,21 @@ class WAR_Affiliate_List {
 										<?php echo esc_html(str_replace(home_url('/'), '', $link['public_url'])); ?>
 									</a>
 								</div>
+								
+								<?php if (!empty($link['description'])): ?>
+								<div class="war-list-item__description" data-war-description="1">
+									<p class="war-description-text"><?php echo esc_html($link['description']); ?></p>
+								</div>
+								<?php endif; ?>
+								
 								<div class="war-list-item__actions">
-									<a href="<?php echo esc_url($link['public_url']); ?>" class="war-btn war-btn--primary" target="_blank">
-										<?php esc_html_e('Acessar', WAR_TEXT_DOMAIN); ?>
-									</a>
+									<?php if (!empty($link['buttons'])): ?>
+										<?php foreach ($link['buttons'] as $button): ?>
+											<a href="<?php echo esc_url($button['url']); ?>" class="war-btn war-btn--primary" target="_blank" rel="noopener noreferrer">
+												<?php echo esc_html($button['label']); ?>
+											</a>
+										<?php endforeach; ?>
+									<?php endif; ?>
 									<button type="button" class="war-btn" data-war-copy-url="<?php echo esc_attr($link['public_url']); ?>">
 										<?php esc_html_e('Copiar', WAR_TEXT_DOMAIN); ?>
 									</button>
@@ -282,12 +315,34 @@ class WAR_Affiliate_List {
 		if ($query->have_posts()) {
 			foreach ($query->posts as $p) {
 				$post_id = (int) $p->ID;
+				
+				// Obter botões
+				$buttons = get_post_meta($post_id, 'war_buttons', true);
+				if (!is_array($buttons)) {
+					$buttons = [];
+				}
+				
+				// Se não há botões, usar war_redirect_url como fallback
+				if (empty($buttons)) {
+					$destination = (string) get_post_meta($post_id, 'war_redirect_url', true);
+					if ($destination !== '') {
+						$buttons = [
+							[
+								'label' => __('Acessar', WAR_TEXT_DOMAIN),
+								'url' => $destination,
+							]
+						];
+					}
+				}
+				
 				$links[] = [
 					'id' => $post_id,
 					'title' => get_the_title($post_id),
 					'slug' => (string) $p->post_name,
 					'public_url' => get_permalink($post_id),
 					'image_url' => (string) get_post_meta($post_id, 'war_image_url', true),
+					'description' => (string) get_post_meta($post_id, 'war_description', true),
+					'buttons' => $buttons,
 					'menu_order' => (int) $p->menu_order,
 				];
 			}

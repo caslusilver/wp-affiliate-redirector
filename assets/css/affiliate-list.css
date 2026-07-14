@@ -179,6 +179,17 @@
 	text-decoration: underline;
 }
 
+.war-affiliate-list[data-war-view="list"] .war-list-item__description {
+	margin-bottom: 12px;
+}
+
+.war-affiliate-list[data-war-view="list"] .war-description-text {
+	margin: 0;
+	font-size: 14px;
+	color: #6b7280;
+	line-height: 1.5;
+}
+
 .war-affiliate-list[data-war-view="list"] .war-list-item__actions {
 	display: flex;
 	gap: 8px;
@@ -279,6 +290,17 @@
 .war-affiliate-list[data-war-view="card"] .war-list-item__url a:hover {
 	color: #2563eb;
 	text-decoration: underline;
+}
+
+.war-affiliate-list[data-war-view="card"] .war-list-item__description {
+	margin-bottom: 16px;
+}
+
+.war-affiliate-list[data-war-view="card"] .war-description-text {
+	margin: 0;
+	font-size: 14px;
+	color: #6b7280;
+	line-height: 1.5;
 }
 
 .war-affiliate-list[data-war-view="card"] .war-list-item__actions {
