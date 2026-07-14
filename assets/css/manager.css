@@ -46,7 +46,26 @@
 }
 
 .war-manager .war-btn:hover {
-  border-color: #c3c4c7 !important;
+	border-color: #c3c4c7 !important;
+}
+
+/* Botões de imagem e ações - força visibilidade */
+.war-manager .war-btn--secondary,
+.war-manager [data-war-select-image],
+.war-manager [data-war-remove-image],
+.war-manager [data-war-add-button] {
+	opacity: 1 !important;
+	background: #2271b1 !important;
+	border-color: #2271b1 !important;
+	color: #fff !important;
+}
+
+.war-manager .war-btn--secondary:hover,
+.war-manager [data-war-select-image]:hover,
+.war-manager [data-war-remove-image]:hover,
+.war-manager [data-war-add-button]:hover {
+	background: #135e96 !important;
+	border-color: #135e96 !important;
 }
 
 .war-manager .war-btn--primary {
