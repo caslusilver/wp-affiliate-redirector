@@ -3,9 +3,34 @@
 ## [Unreleased]
 
 ### Changed
-- **Versão atual**: v0.6.0  
+- **Versão atual**: v0.6.1  
   **Versão sugerida após a mudança**: vX.Y.Z  
   **Descrição**: texto objetivo do que mudou e impacto (pode listar itens separados por ponto e vírgula).
+
+## 0.6.1 - 2026-01-14
+
+#### Protocol: 42248b7
+
+### Breaking
+- N/A
+
+### Removed
+- N/A
+
+### Added
+- Endpoint AJAX dedicado `war_links_get` para carregar link completo por ID
+- Helper `sanitize_list_ids()` aceita array/JSON e remove duplicados
+- `wp_enqueue_media()` em frontend (manager + affiliate-list)
+
+### Changed
+- Lógica inteligente de preservação em `update_link`: campos opcionais só processados se enviados via POST
+- Preservação automática de valores existentes no BD quando campo não vem no POST
+- Aplicado `sanitize_list_ids()` em create_link e update_link para validação robusta
+
+### Fixed
+- Perda de dados ao editar link sem preencher todos os campos (ex: editor inline)
+- Botões de ação agora azuis (#2271b1) com `opacity: 1 !important` para garantir visibilidade
+- Corrige visibilidade de botões em temas com overrides CSS agressivos
 
 ## 0.6.0 - 2026-01-14
 
