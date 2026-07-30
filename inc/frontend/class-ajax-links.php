@@ -21,6 +21,7 @@ class WAR_Ajax_Links {
 		add_action('wp_ajax_war_links_update', [__CLASS__, 'update_link']);
 		add_action('wp_ajax_war_links_delete', [__CLASS__, 'delete_link']);
 		add_action('wp_ajax_war_links_save_order', [__CLASS__, 'save_order']);
+		add_action('wp_ajax_war_links_toggle_visibility', [__CLASS__, 'toggle_visibility']);
 		add_action('wp_ajax_war_get_lists', [__CLASS__, 'get_lists']);
 		add_action('wp_ajax_war_get_all_links', [__CLASS__, 'get_all_links']);
 	}
@@ -224,6 +225,16 @@ class WAR_Ajax_Links {
 			}
 			$kit_active = (bool) get_post_meta($post_id, 'war_kit_active', true);
 			
+			// Obter visibilidade global com fallback
+			$visible_meta = get_post_meta($post_id, 'war_link_visible', true);
+			if ($visible_meta === '') {
+				// Fallback: usar war_kit_active se existir, caso contrário padrão true
+				$visible = get_post_meta($post_id, 'war_kit_active', true);
+				$visible = $visible !== '' ? (bool) $visible : true;
+			} else {
+				$visible = (bool) $visible_meta;
+			}
+			
 			$items[] = [
 				'id' => $post_id,
 				'title' => get_the_title($post_id),
@@ -240,6 +251,7 @@ class WAR_Ajax_Links {
 				'menu_order' => (int) $p->menu_order,
 				'associated_ids' => $associated_ids,
 				'kit_active' => $kit_active,
+				'visible' => $visible,
 			];
 		}
 
@@ -304,6 +316,16 @@ class WAR_Ajax_Links {
 		}
 		$kit_active = (bool) get_post_meta($post_id, 'war_kit_active', true);
 
+		// Obter visibilidade global com fallback
+		$visible_meta = get_post_meta($post_id, 'war_link_visible', true);
+		if ($visible_meta === '') {
+			// Fallback: usar war_kit_active se existir, caso contrário padrão true
+			$visible = get_post_meta($post_id, 'war_kit_active', true);
+			$visible = $visible !== '' ? (bool) $visible : true;
+		} else {
+			$visible = (bool) $visible_meta;
+		}
+
 		$item = [
 			'id' => $post_id,
 			'title' => get_the_title($post_id),
@@ -320,6 +342,7 @@ class WAR_Ajax_Links {
 			'menu_order' => (int) $post->menu_order,
 			'associated_ids' => $associated_ids,
 			'kit_active' => $kit_active,
+			'visible' => $visible,
 		];
 
 		WAR_Debug::log('AJAX Links: Link obtido', ['post_id' => $post_id]);
@@ -630,6 +653,51 @@ class WAR_Ajax_Links {
 		wp_send_json_success([
 			'updated' => $updated,
 			'message' => sprintf('%d link(s) reordenado(s).', $updated),
+		]);
+	}
+
+	/**
+	 * Alternar visibilidade global de um link (toggle rápido).
+	 * Endpoint otimizado que altera apenas o campo de visibilidade.
+	 */
+	public static function toggle_visibility() {
+		self::guard();
+
+		$post_id = isset($_POST['id']) ? absint($_POST['id']) : 0;
+		if (!$post_id || get_post_type($post_id) !== 'war_link') {
+			wp_send_json_error(['message' => 'Link inválido.'], 400);
+		}
+
+		if (!current_user_can('edit_post', $post_id)) {
+			wp_send_json_error(['message' => 'Sem permissão para editar este link.'], 403);
+		}
+
+		// Obter estado atual
+		$current_visible = get_post_meta($post_id, 'war_link_visible', true);
+		
+		// Se não existe, usar fallback do war_kit_active ou padrão true
+		if ($current_visible === '') {
+			$current_visible = get_post_meta($post_id, 'war_kit_active', true);
+			$current_visible = $current_visible !== '' ? (bool) $current_visible : true;
+		} else {
+			$current_visible = (bool) $current_visible;
+		}
+
+		// Inverter estado
+		$new_visible = !$current_visible;
+
+		// Salvar novo estado
+		update_post_meta($post_id, 'war_link_visible', $new_visible ? 1 : 0);
+
+		WAR_Debug::log('AJAX Links: Visibilidade alterada', [
+			'post_id' => $post_id,
+			'old_visible' => $current_visible,
+			'new_visible' => $new_visible,
+		]);
+
+		wp_send_json_success([
+			'id' => $post_id,
+			'visible' => $new_visible,
 		]);
 	}
 

@@ -606,6 +606,64 @@
 	}
 
 	// ============================================================================
+	// TOGGLE RÁPIDO DE VISIBILIDADE
+	// ============================================================================
+
+	function initQuickVisibilityToggle() {
+		if (!isAdmin) return;
+
+		$(document).on('change', '[data-war-toggle-visibility]', function() {
+			var $checkbox = $(this);
+			var linkId = $checkbox.attr('data-war-toggle-visibility');
+			var $toggleSwitch = $checkbox.closest('.war-admin-toggle-switch');
+			var isChecked = $checkbox.is(':checked');
+
+			// Bloquear toggle durante processamento
+			$checkbox.prop('disabled', true);
+			$toggleSwitch.addClass('war-toggle-loading');
+
+			$.ajax({
+				url: ajaxUrl,
+				type: 'POST',
+				data: {
+					action: 'war_links_toggle_visibility',
+					nonce: nonce,
+					id: linkId
+				},
+				success: function(response) {
+					if (response.success) {
+						// Atualizar tooltip
+						var newTitle = response.data.visible 
+							? 'Link visível ao público' 
+							: 'Link oculto do público';
+						$toggleSwitch.attr('title', newTitle);
+						
+						// Feedback visual rápido
+						$toggleSwitch.css('opacity', '0.7');
+						setTimeout(function() {
+							$toggleSwitch.css('opacity', '1');
+						}, 150);
+					} else {
+						// Erro: reverter estado do checkbox
+						$checkbox.prop('checked', !isChecked);
+						alert('Erro ao alterar visibilidade: ' + (response.data && response.data.message ? response.data.message : 'Erro desconhecido'));
+					}
+				},
+				error: function() {
+					// Erro de conexão: reverter estado do checkbox
+					$checkbox.prop('checked', !isChecked);
+					alert('Erro de conexão ao alterar visibilidade.');
+				},
+				complete: function() {
+					// Desbloquear toggle
+					$checkbox.prop('disabled', false);
+					$toggleSwitch.removeClass('war-toggle-loading');
+				}
+			});
+		});
+	}
+
+	// ============================================================================
 	// INICIALIZAÇÃO
 	// ============================================================================
 
@@ -616,6 +674,7 @@
 		initEditLink();
 		initDeleteLink();
 		initDragDrop();
+		initQuickVisibilityToggle();
 	});
 
 })(jQuery);

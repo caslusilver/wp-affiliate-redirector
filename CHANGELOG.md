@@ -3,9 +3,38 @@
 ## [Unreleased]
 
 ### Changed
-- **Versão atual**: v0.7.0  
+- **Versão atual**: v0.8.0  
   **Versão sugerida após a mudança**: vX.Y.Z  
   **Descrição**: texto objetivo do que mudou e impacto (pode listar itens separados por ponto e vírgula).
+
+## 0.8.0 - 2026-07-30
+
+#### Protocol: c66599f
+
+### Breaking
+- N/A
+
+### Removed
+- N/A
+
+### Added
+- Meta global `war_link_visible` para controle de visibilidade independente de kit/associação
+- Endpoint AJAX otimizado `war_links_toggle_visibility` para alteração rápida de visibilidade
+- Toggle administrativo visível em todos os cards/itens da lista sem precisar abrir editor
+- Estilos CSS para toggle com cores nítidas (verde=visível, cinza=oculto)
+- Fallback inteligente: usa `war_kit_active` como padrão se `war_link_visible` não existir
+- Bloqueio de interações durante processamento AJAX com reversão automática em caso de erro
+
+### Changed
+- `class-affiliate-list.php`: método `filter_kit_links()` refatorado com nova lógica combinada (visibilidade global + kits)
+- `class-affiliate-list.php`: campo `visible` incluído nos dados de todos os links (shortcode + AJAX público)
+- `class-ajax-links.php`: endpoints `list_links`, `get_link` agora retornam campo `visible`
+- `affiliate-list.js`: novo handler `initQuickVisibilityToggle()` com feedback visual e proteção de estado
+- Toggle posicionado no topo do card (visão grade) e junto aos controles (visão lista)
+- Regra pública: link invisível nunca aparece; kit invisível libera associados visíveis; kit visível oculta associados
+
+### Fixed
+- N/A
 
 ## 0.7.0 - 2026-07-30
 

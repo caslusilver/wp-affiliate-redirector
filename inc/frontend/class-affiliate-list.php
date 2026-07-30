@@ -170,6 +170,16 @@ class WAR_Affiliate_List {
 				}
 				$kit_active = (bool) get_post_meta($post_id, 'war_kit_active', true);
 				
+				// Obter visibilidade global com fallback
+				$visible_meta = get_post_meta($post_id, 'war_link_visible', true);
+				if ($visible_meta === '') {
+					// Fallback: usar war_kit_active se existir, caso contrário padrão true
+					$visible = get_post_meta($post_id, 'war_kit_active', true);
+					$visible = $visible !== '' ? (bool) $visible : true;
+				} else {
+					$visible = (bool) $visible_meta;
+				}
+				
 				$links[] = [
 					'id' => $post_id,
 					'title' => get_the_title($post_id),
@@ -182,6 +192,7 @@ class WAR_Affiliate_List {
 					'menu_order' => (int) $p->menu_order,
 					'associated_ids' => $associated_ids,
 					'kit_active' => $kit_active,
+					'visible' => $visible,
 				];
 			}
 		}
@@ -272,8 +283,15 @@ class WAR_Affiliate_List {
 								</div>
 							</div>
 
-							<?php if ($is_admin): ?>
+						<?php if ($is_admin): ?>
 							<div class="war-list-item__admin">
+								<div class="war-admin-toggle-switch" title="<?php echo $link['visible'] ? esc_attr__('Link visível ao público', WAR_TEXT_DOMAIN) : esc_attr__('Link oculto do público', WAR_TEXT_DOMAIN); ?>">
+									<input type="checkbox" class="war-admin-toggle-input" id="war-toggle-<?php echo esc_attr($link['id']); ?>" data-war-toggle-visibility="<?php echo esc_attr($link['id']); ?>" <?php checked($link['visible'], true); ?> />
+									<label for="war-toggle-<?php echo esc_attr($link['id']); ?>" class="war-admin-toggle-label">
+										<span class="war-admin-toggle-inner"></span>
+										<span class="war-admin-toggle-switch-btn"></span>
+									</label>
+								</div>
 								<button type="button" class="war-admin-btn" data-war-edit-link="<?php echo esc_attr($link['id']); ?>" title="<?php esc_attr_e('Editar', WAR_TEXT_DOMAIN); ?>">
 									<span class="dashicons dashicons-edit"></span>
 								</button>
@@ -363,6 +381,16 @@ class WAR_Affiliate_List {
 				}
 				$kit_active = (bool) get_post_meta($post_id, 'war_kit_active', true);
 				
+				// Obter visibilidade global com fallback
+				$visible_meta = get_post_meta($post_id, 'war_link_visible', true);
+				if ($visible_meta === '') {
+					// Fallback: usar war_kit_active se existir, caso contrário padrão true
+					$visible = get_post_meta($post_id, 'war_kit_active', true);
+					$visible = $visible !== '' ? (bool) $visible : true;
+				} else {
+					$visible = (bool) $visible_meta;
+				}
+				
 				$all_links[] = [
 					'id' => $post_id,
 					'title' => get_the_title($post_id),
@@ -374,6 +402,7 @@ class WAR_Affiliate_List {
 					'menu_order' => (int) $p->menu_order,
 					'associated_ids' => $associated_ids,
 					'kit_active' => $kit_active,
+					'visible' => $visible,
 				];
 			}
 		}
@@ -388,30 +417,44 @@ class WAR_Affiliate_List {
 	}
 
 	/**
-	 * Filtrar links baseado na lógica de kits.
-	 * - Kits ativos: exibe o kit, oculta os associados
-	 * - Kits inativos: oculta o kit, exibe os associados
-	 * - Links normais: sempre exibidos
+	 * Filtrar links baseado na visibilidade global e lógica de kits.
+	 * Regras combinadas:
+	 * 1. Visibilidade global: se visible=false, link sempre oculto
+	 * 2. Kit ativo e visível: exibe o kit, oculta os associados
+	 * 3. Kit inativo ou invisível: oculta o kit, libera os associados (se estiverem visíveis)
+	 * 4. Links normais visíveis: sempre exibidos
 	 */
 	private static function filter_kit_links($links) {
 		$ids_to_hide = [];
 		
-		// Primeiro passo: identificar IDs que devem ser ocultados
+		// Primeiro passo: ocultar links com visibilidade desativada
 		foreach ($links as $link) {
+			$is_visible = isset($link['visible']) ? $link['visible'] : true;
+			if (!$is_visible) {
+				$ids_to_hide[] = $link['id'];
+			}
+		}
+		
+		// Segundo passo: aplicar lógica de kits
+		foreach ($links as $link) {
+			$is_visible = isset($link['visible']) ? $link['visible'] : true;
 			$has_associations = !empty($link['associated_ids']);
 			
-			if ($has_associations) {
+			if ($has_associations && $is_visible) {
 				if ($link['kit_active']) {
-					// Kit ativo: ocultar os links associados
+					// Kit ativo e visível: ocultar os links associados
 					$ids_to_hide = array_merge($ids_to_hide, $link['associated_ids']);
 				} else {
 					// Kit inativo: ocultar o próprio kit
 					$ids_to_hide[] = $link['id'];
 				}
+			} elseif ($has_associations && !$is_visible) {
+				// Kit invisível: ocultar o kit (já está na lista) e não forçar ocultação dos associados
+				// Os associados aparecerão se tiverem visible=true
 			}
 		}
 		
-		// Segundo passo: filtrar links removendo os IDs marcados para ocultar
+		// Terceiro passo: filtrar links removendo os IDs marcados para ocultar
 		$filtered_links = [];
 		foreach ($links as $link) {
 			if (!in_array($link['id'], $ids_to_hide, true)) {
