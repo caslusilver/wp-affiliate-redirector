@@ -71,84 +71,395 @@
 }
 
 /* ============================================================================
-   CONTAINER DE LISTA/CARDS
+   EDITOR INLINE
    ============================================================================ */
 
-.war-list-container {
-	position: relative;
+.war-inline-editor {
+	background: #f9fafb;
+	border: 2px solid #e5e7eb;
+	border-radius: 12px;
+	margin: 16px 0;
+	padding: 20px;
+	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 }
 
-.war-list-empty {
+.war-inline-editor__loading {
 	text-align: center;
-	padding: 60px 20px;
+	padding: 40px;
 	color: #6b7280;
 	font-size: 16px;
 }
 
-/* ============================================================================
-   VISUALIZAÇÃO LISTA (padrão)
-   ============================================================================ */
-
-.war-affiliate-list[data-war-view="list"] .war-list-container {
+.war-inline-editor__content {
 	display: flex;
 	flex-direction: column;
 	gap: 16px;
 }
 
-.war-affiliate-list[data-war-view="list"] .war-list-item {
+.war-inline-field {
 	display: flex;
-	align-items: center;
-	gap: 20px;
-	background: #fff;
-	border: 1px solid #e5e7eb;
-	border-radius: 12px;
-	padding: 16px;
-	transition: all 0.2s ease;
-	position: relative;
+	flex-direction: column;
+	gap: 8px;
 }
 
-.war-affiliate-list[data-war-view="list"] .war-list-item:hover {
-	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-	border-color: #d1d5db;
+.war-inline-field__label {
+	font-size: 14px;
+	font-weight: 600;
+	color: #374151;
 }
 
-.war-affiliate-list[data-war-view="list"] .war-list-item__image {
-	flex-shrink: 0;
-	width: 80px;
-	height: 80px;
+.war-inline-field__input,
+.war-inline-field__textarea {
+	width: 100%;
+	padding: 10px 14px;
+	border: 2px solid #d1d5db;
 	border-radius: 8px;
-	overflow: hidden;
-	background: #f3f4f6;
+	font-size: 15px;
+	font-family: inherit;
+	transition: all 0.2s ease;
+	background: #ffffff;
+}
+
+.war-inline-field__input:focus,
+.war-inline-field__textarea:focus {
+	outline: none;
+	border-color: #3b82f6;
+	box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.war-inline-field__textarea {
+	resize: vertical;
+	min-height: 80px;
+}
+
+/* Imagem Upload */
+.war-inline-image-upload {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.war-inline-image-preview {
+	width: 100%;
+	max-width: 300px;
+	height: 200px;
+	border: 2px dashed #d1d5db;
+	border-radius: 8px;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	cursor: pointer;
-	transition: transform 0.2s ease;
+	overflow: hidden;
+	background: #ffffff;
 }
 
-.war-affiliate-list[data-war-view="list"] .war-list-item__image:hover {
-	transform: scale(1.05);
-}
-
-.war-affiliate-list[data-war-view="list"] .war-list-item__image img {
+.war-inline-image-preview img {
 	width: 100%;
 	height: 100%;
 	object-fit: cover;
 }
 
-.war-affiliate-list[data-war-view="list"] .war-list-item__image--placeholder {
-	cursor: default;
-}
-
-.war-affiliate-list[data-war-view="list"] .war-list-item__image--placeholder:hover {
-	transform: none;
-}
-
-.war-affiliate-list[data-war-view="list"] .war-list-item__image--placeholder .dashicons {
-	font-size: 40px;
-	width: 40px;
-	height: 40px;
+.war-inline-image-placeholder {
+	text-align: center;
 	color: #9ca3af;
+	font-size: 48px;
+}
+
+.war-inline-image-actions {
+	display: flex;
+	gap: 8px;
+}
+
+/* Botões Editor */
+.war-inline-buttons-editor {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.war-inline-buttons-list {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.war-inline-button-item {
+	display: grid;
+	grid-template-columns: 1fr 2fr auto;
+	gap: 8px;
+	align-items: center;
+}
+
+.war-inline-button-item input {
+	padding: 8px 12px;
+	border: 2px solid #d1d5db;
+	border-radius: 6px;
+	font-size: 14px;
+}
+
+.war-btn-icon {
+	appearance: none;
+	background: #ef4444;
+	color: #ffffff;
+	border: none;
+	border-radius: 6px;
+	width: 36px;
+	height: 36px;
+	cursor: pointer;
+	font-size: 18px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: all 0.2s ease;
+	opacity: 1 !important;
+}
+
+.war-btn-icon:hover {
+	background: #dc2626;
+	transform: scale(1.05);
+}
+
+.war-inline-no-buttons {
+	color: #6b7280;
+	font-style: italic;
+	margin: 0;
+	padding: 12px;
+	background: #f3f4f6;
+	border-radius: 6px;
+	text-align: center;
+}
+
+/* Associações */
+.war-inline-associations {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+.war-inline-search {
+	padding: 10px 14px;
+	border: 2px solid #d1d5db;
+	border-radius: 8px;
+	font-size: 15px;
+	width: 100%;
+}
+
+.war-inline-search:focus {
+	outline: none;
+	border-color: #3b82f6;
+	box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.war-inline-associations-list {
+	max-height: 300px;
+	overflow-y: auto;
+	border: 2px solid #e5e7eb;
+	border-radius: 8px;
+	padding: 12px;
+	background: #ffffff;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.war-inline-checkbox {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 10px;
+	border-radius: 6px;
+	cursor: pointer;
+	transition: background 0.2s ease;
+}
+
+.war-inline-checkbox:hover {
+	background: #f3f4f6;
+}
+
+.war-inline-checkbox input[type="checkbox"] {
+	width: 18px;
+	height: 18px;
+	cursor: pointer;
+}
+
+.war-inline-checkbox span {
+	font-size: 14px;
+	color: #374151;
+}
+
+.war-inline-no-links {
+	color: #6b7280;
+	font-style: italic;
+	margin: 0;
+	text-align: center;
+}
+
+/* Toggle Switch */
+.war-toggle-switch {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.war-toggle-switch input[type="checkbox"] {
+	position: absolute;
+	opacity: 0;
+	pointer-events: none;
+}
+
+.war-toggle-label {
+	position: relative;
+	display: inline-block;
+	width: 60px;
+	height: 32px;
+	background: #d1d5db;
+	border-radius: 16px;
+	cursor: pointer;
+	transition: background 0.3s ease;
+}
+
+.war-toggle-switch input[type="checkbox"]:checked + .war-toggle-label {
+	background: #10b981;
+}
+
+.war-toggle-inner {
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+
+.war-toggle-switch-btn {
+	position: absolute;
+	top: 4px;
+	left: 4px;
+	width: 24px;
+	height: 24px;
+	background: #ffffff;
+	border-radius: 50%;
+	transition: transform 0.3s ease;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.war-toggle-switch input[type="checkbox"]:checked + .war-toggle-label .war-toggle-switch-btn {
+	transform: translateX(28px);
+}
+
+.war-toggle-text {
+	font-size: 14px;
+	color: #374151;
+	font-weight: 500;
+}
+
+/* Ações do Editor Inline */
+.war-inline-actions {
+	display: flex;
+	gap: 12px;
+	justify-content: flex-end;
+	padding-top: 16px;
+	border-top: 2px solid #e5e7eb;
+}
+
+/* ============================================================================
+   RESPONSIVIDADE
+   ============================================================================ */
+
+@media (max-width: 768px) {
+	.war-affiliate-list {
+		padding: 0 12px;
+	}
+
+	.war-list-title {
+		font-size: 22px;
+	}
+
+	.war-list-controls {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 16px;
+	}
+
+	.war-list-controls__right {
+		align-self: flex-end;
+	}
+
+	/* Visualização em cards no mobile */
+	.war-affiliate-list[data-war-view="card"] .war-list-item {
+		flex-direction: column;
+	}
+
+	.war-affiliate-list[data-war-view="card"] .war-list-item__image {
+		width: 100%;
+		max-width: none;
+		height: 200px;
+	}
+
+	/* Visualização em lista no mobile */
+	.war-affiliate-list[data-war-view="list"] .war-list-item {
+		grid-template-columns: 80px 1fr auto;
+		gap: 12px;
+	}
+
+	.war-affiliate-list[data-war-view="list"] .war-list-item--no-image {
+		grid-template-columns: 1fr auto;
+	}
+
+	.war-affiliate-list[data-war-view="list"] .war-list-item__image {
+		width: 80px;
+		height: 80px;
+	}
+
+	.war-list-item__title {
+		font-size: 16px;
+	}
+
+	.war-list-item__url a {
+		font-size: 12px;
+	}
+
+	.war-list-item__actions {
+		flex-wrap: wrap;
+	}
+
+	.war-btn {
+		font-size: 13px;
+		padding: 8px 14px;
+	}
+
+	.war-list-item__admin {
+		gap: 6px;
+	}
+
+	.war-admin-btn {
+		width: 32px;
+		height: 32px;
+	}
+
+	.war-drag-handle {
+		width: 32px;
+		height: 32px;
+	}
+
+	/* Editor Inline Mobile */
+	.war-inline-editor {
+		padding: 16px;
+	}
+
+	.war-inline-button-item {
+		grid-template-columns: 1fr;
+		gap: 8px;
+	}
+
+	.war-inline-actions {
+		flex-direction: column-reverse;
+	}
+
+	.war-inline-actions .war-btn {
+		width: 100%;
+	}
+
+	.war-toggle-switch {
+		flex-direction: column;
+		align-items: flex-start;
+	}
 }
 
 .war-affiliate-list[data-war-view="list"] .war-list-item__content {

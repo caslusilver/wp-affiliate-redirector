@@ -22,6 +22,7 @@ class WAR_Ajax_Links {
 		add_action('wp_ajax_war_links_delete', [__CLASS__, 'delete_link']);
 		add_action('wp_ajax_war_links_save_order', [__CLASS__, 'save_order']);
 		add_action('wp_ajax_war_get_lists', [__CLASS__, 'get_lists']);
+		add_action('wp_ajax_war_get_all_links', [__CLASS__, 'get_all_links']);
 	}
 
 	private static function guard() {
@@ -118,6 +119,60 @@ class WAR_Ajax_Links {
 		return array_values(array_unique($ids_clean));
 	}
 
+	/**
+	 * Validar e sanitizar IDs de links associados (para kits).
+	 * Impede associação a si mesmo e dependência circular.
+	 */
+	private static function validate_associated_ids($post_id, $raw) {
+		// Aceita array ou JSON string
+		if (is_string($raw)) {
+			$decoded = json_decode($raw, true);
+			if (is_array($decoded)) {
+				$raw = $decoded;
+			} else {
+				return [];
+			}
+		}
+
+		if (!is_array($raw)) {
+			return [];
+		}
+
+		$ids_clean = [];
+		foreach ($raw as $id) {
+			$id = absint($id);
+			if ($id <= 0) {
+				continue;
+			}
+
+			// Impedir associação a si mesmo
+			if ($post_id > 0 && $id === $post_id) {
+				continue;
+			}
+
+			// Verificar se o link existe
+			if (get_post_type($id) !== 'war_link') {
+				continue;
+			}
+
+			// Impedir dependência circular: se o link B já contém o link A,
+			// o link A não pode conter o link B
+			$reverse_associations = get_post_meta($id, 'war_associated_ids', true);
+			if (is_array($reverse_associations) && in_array($post_id, $reverse_associations, true)) {
+				WAR_Debug::log('AJAX Links: Associação circular bloqueada', [
+					'post_id' => $post_id,
+					'blocked_id' => $id,
+				]);
+				continue;
+			}
+
+			$ids_clean[] = $id;
+		}
+
+		// Remover duplicados
+		return array_values(array_unique($ids_clean));
+	}
+
 	public static function list_links() {
 		self::guard();
 
@@ -162,6 +217,13 @@ class WAR_Ajax_Links {
 				$buttons = [];
 			}
 			
+			// Obter associações de kit
+			$associated_ids = get_post_meta($post_id, 'war_associated_ids', true);
+			if (!is_array($associated_ids)) {
+				$associated_ids = [];
+			}
+			$kit_active = (bool) get_post_meta($post_id, 'war_kit_active', true);
+			
 			$items[] = [
 				'id' => $post_id,
 				'title' => get_the_title($post_id),
@@ -176,6 +238,8 @@ class WAR_Ajax_Links {
 				'lists' => $list_names,
 				'list_ids' => $list_ids,
 				'menu_order' => (int) $p->menu_order,
+				'associated_ids' => $associated_ids,
+				'kit_active' => $kit_active,
 			];
 		}
 
@@ -233,6 +297,13 @@ class WAR_Ajax_Links {
 			$buttons = [];
 		}
 
+		// Obter associações de kit
+		$associated_ids = get_post_meta($post_id, 'war_associated_ids', true);
+		if (!is_array($associated_ids)) {
+			$associated_ids = [];
+		}
+		$kit_active = (bool) get_post_meta($post_id, 'war_kit_active', true);
+
 		$item = [
 			'id' => $post_id,
 			'title' => get_the_title($post_id),
@@ -247,6 +318,8 @@ class WAR_Ajax_Links {
 			'lists' => $list_names,
 			'list_ids' => $list_ids,
 			'menu_order' => (int) $post->menu_order,
+			'associated_ids' => $associated_ids,
+			'kit_active' => $kit_active,
 		];
 
 		WAR_Debug::log('AJAX Links: Link obtido', ['post_id' => $post_id]);
@@ -331,6 +404,24 @@ class WAR_Ajax_Links {
 		if (!empty($list_ids)) {
 			wp_set_object_terms($post_id, $list_ids, 'war_list');
 			WAR_Debug::log('AJAX Links: Listas associadas', ['post_id' => $post_id, 'list_ids' => $list_ids]);
+		}
+
+		// Processar associações de kit (se enviadas)
+		if (isset($_POST['associated_ids'])) {
+			$associated_ids_raw = wp_unslash($_POST['associated_ids']);
+			$associated_ids = self::validate_associated_ids($post_id, $associated_ids_raw);
+			
+			if (!empty($associated_ids)) {
+				update_post_meta($post_id, 'war_associated_ids', $associated_ids);
+				WAR_Debug::log('AJAX Links: Associações de kit salvas', ['post_id' => $post_id, 'associated_ids' => $associated_ids]);
+			}
+		}
+
+		// Processar status do kit (se enviado)
+		if (isset($_POST['kit_active'])) {
+			$kit_active = (bool) $_POST['kit_active'];
+			update_post_meta($post_id, 'war_kit_active', $kit_active ? 1 : 0);
+			WAR_Debug::log('AJAX Links: Status do kit salvo', ['post_id' => $post_id, 'kit_active' => $kit_active]);
 		}
 
 		WAR_Debug::log('AJAX Links: Criado com sucesso', ['post_id' => $post_id]);
@@ -462,6 +553,28 @@ class WAR_Ajax_Links {
 			}
 		}
 
+		// Atualizar associações de kit: só se campo foi enviado
+		if (isset($_POST['associated_ids'])) {
+			$associated_ids_raw = wp_unslash($_POST['associated_ids']);
+			$associated_ids = self::validate_associated_ids($post_id, $associated_ids_raw);
+			
+			if (!empty($associated_ids)) {
+				update_post_meta($post_id, 'war_associated_ids', $associated_ids);
+				WAR_Debug::log('AJAX Links: Associações de kit atualizadas', ['post_id' => $post_id, 'associated_ids' => $associated_ids]);
+			} else {
+				// Array vazio = remover associações
+				delete_post_meta($post_id, 'war_associated_ids');
+				WAR_Debug::log('AJAX Links: Associações removidas', ['post_id' => $post_id]);
+			}
+		}
+
+		// Atualizar status do kit: só se campo foi enviado
+		if (isset($_POST['kit_active'])) {
+			$kit_active = (bool) $_POST['kit_active'];
+			update_post_meta($post_id, 'war_kit_active', $kit_active ? 1 : 0);
+			WAR_Debug::log('AJAX Links: Status do kit atualizado', ['post_id' => $post_id, 'kit_active' => $kit_active]);
+		}
+
 		WAR_Debug::log('AJAX Links: Atualizado com sucesso', ['post_id' => $post_id]);
 
 		wp_send_json_success(['id' => $post_id]);
@@ -551,6 +664,38 @@ class WAR_Ajax_Links {
 
 		wp_send_json_success([
 			'lists' => $lists,
+		]);
+	}
+
+	/**
+	 * Obter todos os links (para seletor de associações no editor inline).
+	 */
+	public static function get_all_links() {
+		self::guard();
+
+		$args = [
+			'post_type' => 'war_link',
+			'post_status' => 'publish',
+			'posts_per_page' => -1,
+			'orderby' => 'title',
+			'order' => 'ASC',
+		];
+
+		$query = new WP_Query($args);
+		$links = [];
+
+		foreach ($query->posts as $p) {
+			$links[] = [
+				'id' => (int) $p->ID,
+				'title' => get_the_title($p->ID),
+			];
+		}
+		wp_reset_postdata();
+
+		WAR_Debug::log('AJAX Links: Todos os links obtidos', ['count' => count($links)]);
+
+		wp_send_json_success([
+			'links' => $links,
 		]);
 	}
 }

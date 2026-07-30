@@ -163,6 +163,13 @@ class WAR_Affiliate_List {
 					}
 				}
 				
+				// Obter associações de kit
+				$associated_ids = get_post_meta($post_id, 'war_associated_ids', true);
+				if (!is_array($associated_ids)) {
+					$associated_ids = [];
+				}
+				$kit_active = (bool) get_post_meta($post_id, 'war_kit_active', true);
+				
 				$links[] = [
 					'id' => $post_id,
 					'title' => get_the_title($post_id),
@@ -173,12 +180,19 @@ class WAR_Affiliate_List {
 					'description' => (string) get_post_meta($post_id, 'war_description', true),
 					'buttons' => $buttons,
 					'menu_order' => (int) $p->menu_order,
+					'associated_ids' => $associated_ids,
+					'kit_active' => $kit_active,
 				];
 			}
 		}
 		wp_reset_postdata();
 
 		$is_admin = current_user_can('manage_options');
+		
+		// Aplicar filtragem de kits (apenas para público)
+		if (!$is_admin) {
+			$links = self::filter_kit_links($links);
+		}
 
 		ob_start();
 		?>
@@ -291,6 +305,7 @@ class WAR_Affiliate_List {
 
 	/**
 	 * Endpoint AJAX público para obter links de uma lista.
+	 * Aplica filtragem de kits baseado no status (ativo/inativo).
 	 */
 	public static function ajax_get_links() {
 		$list_slug = isset($_POST['list_slug']) ? sanitize_title($_POST['list_slug']) : '';
@@ -315,7 +330,8 @@ class WAR_Affiliate_List {
 		];
 
 		$query = new WP_Query($args);
-		$links = [];
+		$all_links = [];
+		$is_admin = current_user_can('manage_options');
 
 		if ($query->have_posts()) {
 			foreach ($query->posts as $p) {
@@ -340,7 +356,14 @@ class WAR_Affiliate_List {
 					}
 				}
 				
-				$links[] = [
+				// Obter associações de kit
+				$associated_ids = get_post_meta($post_id, 'war_associated_ids', true);
+				if (!is_array($associated_ids)) {
+					$associated_ids = [];
+				}
+				$kit_active = (bool) get_post_meta($post_id, 'war_kit_active', true);
+				
+				$all_links[] = [
 					'id' => $post_id,
 					'title' => get_the_title($post_id),
 					'slug' => (string) $p->post_name,
@@ -349,11 +372,53 @@ class WAR_Affiliate_List {
 					'description' => (string) get_post_meta($post_id, 'war_description', true),
 					'buttons' => $buttons,
 					'menu_order' => (int) $p->menu_order,
+					'associated_ids' => $associated_ids,
+					'kit_active' => $kit_active,
 				];
 			}
 		}
 		wp_reset_postdata();
 
-		wp_send_json_success(['links' => $links]);
+		// Aplicar filtragem de kits (apenas para público)
+		if (!$is_admin) {
+			$all_links = self::filter_kit_links($all_links);
+		}
+
+		wp_send_json_success(['links' => $all_links]);
+	}
+
+	/**
+	 * Filtrar links baseado na lógica de kits.
+	 * - Kits ativos: exibe o kit, oculta os associados
+	 * - Kits inativos: oculta o kit, exibe os associados
+	 * - Links normais: sempre exibidos
+	 */
+	private static function filter_kit_links($links) {
+		$ids_to_hide = [];
+		
+		// Primeiro passo: identificar IDs que devem ser ocultados
+		foreach ($links as $link) {
+			$has_associations = !empty($link['associated_ids']);
+			
+			if ($has_associations) {
+				if ($link['kit_active']) {
+					// Kit ativo: ocultar os links associados
+					$ids_to_hide = array_merge($ids_to_hide, $link['associated_ids']);
+				} else {
+					// Kit inativo: ocultar o próprio kit
+					$ids_to_hide[] = $link['id'];
+				}
+			}
+		}
+		
+		// Segundo passo: filtrar links removendo os IDs marcados para ocultar
+		$filtered_links = [];
+		foreach ($links as $link) {
+			if (!in_array($link['id'], $ids_to_hide, true)) {
+				$filtered_links[] = $link;
+			}
+		}
+		
+		return $filtered_links;
 	}
 }

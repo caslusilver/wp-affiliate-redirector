@@ -3,9 +3,47 @@
 ## [Unreleased]
 
 ### Changed
-- **Versão atual**: v0.6.1  
+- **Versão atual**: v0.7.0  
   **Versão sugerida após a mudança**: vX.Y.Z  
   **Descrição**: texto objetivo do que mudou e impacto (pode listar itens separados por ponto e vírgula).
+
+## 0.7.0 - 2026-07-30
+
+#### Protocol: c343e68
+
+### Breaking
+- N/A
+
+### Removed
+- Modal de edição pop-up substituído por editor inline (assets/js/affiliate-list.js)
+
+### Added
+- Sistema completo de kits e associações entre links
+- Campo `war_associated_ids` para armazenar IDs de links associados a um kit
+- Campo `war_kit_active` para controlar status do kit (ativo/inativo)
+- Endpoint AJAX `war_get_all_links` para buscar todos os links (seletor de associações)
+- Método `validate_associated_ids()` com validação circular e auto-associação
+- Método `filter_kit_links()` para filtragem condicional de kits públicos
+- Editor inline responsivo que abre abaixo do item sendo editado
+- Campo de busca em tempo real para associações de links
+- Toggle switch visual para ativar/desativar kit
+- Seletor de links associados com checkboxes mobile-friendly
+- Estilos CSS completos para editor inline e toggle switch
+- Responsividade mobile-first para todos os novos componentes
+
+### Changed
+- `class-ajax-links.php`: endpoints retornam `associated_ids` e `kit_active`
+- `class-ajax-links.php`: `create_link()` e `update_link()` validam e salvam associações
+- `class-affiliate-list.php`: aplica filtragem de kits antes de renderizar (público)
+- `class-affiliate-list.php`: admin vê todos os links, público vê apenas filtrados
+- `affiliate-list.js`: editor inline substitui modal pop-up
+- `affiliate-list.js`: integração limpa com Media Library do WordPress
+- `affiliate-list.css`: novos estilos para editor inline, toggle switch e responsividade
+
+### Fixed
+- Conflito de z-index entre modal de edição e Media Library (eliminado com editor inline)
+- Dificuldade de edição no celular devido a pop-ups (resolvido com painel expansível)
+- Associação circular e auto-associação agora bloqueadas com validação robusta
 
 ## 0.6.1 - 2026-01-14
 
